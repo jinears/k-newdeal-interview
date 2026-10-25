@@ -1,12 +1,51 @@
 rules_version = '2';
 // K-뉴딜 모의면접 피드백 보드 · Firestore 보안 규칙
 // Firebase 콘솔 → Firestore Database → 규칙(Rules) 탭에 전체를 붙여넣고 [게시]를 누르세요.
-// 로그인한 면접관만 교육생(students) · 평가(evals) · 결과지(finals)를 읽고 쓸 수 있습니다.
+//
+// · 관리자(운영 담당자): 모든 교육생·평가·결과지를 읽고 쓸 수 있습니다.
+// · 면접관: 교육생 문서의 interviewers 목록에 본인 이메일이 있는 교육생과 그 평가만 볼 수 있습니다.
+//
+// ▼ 아래 관리자 이메일 목록을 index.html 의 ADMIN_EMAILS 와 똑같이 맞춰 주세요. (소문자)
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{col}/{docId} {
-      allow read, write: if request.auth != null
-                         && col in ['students', 'evals', 'finals'];
+
+    function isAdmin() {
+      return request.auth != null
+          && request.auth.token.email in [
+               'leej@knd.kr'   // ← 이진 프로 이메일로 바꾸세요 (소문자)
+             ];
+    }
+    function me() { return request.auth.token.email; }
+    function assigned(data) {
+      return request.auth != null && me() in data.interviewers;
+    }
+    function studentOf(sid) {
+      return get(/databases/$(database)/documents/students/$(sid)).data;
+    }
+
+    // 교육생 명단
+    match /students/{sid} {
+      allow read: if isAdmin() || assigned(resource.data);
+      // 담당 면접관은 케이스 배정(caseId)만 바꿀 수 있음
+      allow update: if isAdmin()
+                    || (assigned(resource.data)
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['caseId']));
+      allow create, delete: if isAdmin();
+    }
+
+    // 면접관 평가 (문서 ID: 교육생ID__hr 또는 교육생ID__tech)
+    match /evals/{eid} {
+      allow read: if isAdmin() || assigned(resource.data);
+      allow create, update: if isAdmin()
+                            || (assigned(studentOf(request.resource.data.sid))
+                                && request.resource.data.interviewers == studentOf(request.resource.data.sid).interviewers
+                                && (eid == request.resource.data.sid + '__hr' || eid == request.resource.data.sid + '__tech'));
+      allow delete: if isAdmin();
+    }
+
+    // 결과지 (종합 의견 · 전달 여부) — 관리자만
+    match /finals/{sid} {
+      allow read, write: if isAdmin();
     }
   }
 }
