@@ -214,6 +214,13 @@ tr.click{cursor:pointer}
 .confirm{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--bad)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:13px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
+/* 면접관 지정 */
+.ivgroups{display:flex;flex-direction:column;gap:8px}
+.ivg{display:grid;grid-template-columns:minmax(110px,150px) minmax(0,1fr) auto;gap:8px;align-items:center}
+@media (max-width:560px){.ivg{grid-template-columns:minmax(0,1fr) auto}.ivg-l{grid-column:1/-1}}
+.ivg-l b{display:block;font-size:13px}.ivg-l small{display:block;font-size:11.5px;color:var(--muted)}
+.ivcell span{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;margin:1px 4px 1px 0;white-space:nowrap}
+.ivcell .ok{background:var(--good-soft);color:var(--good)}.ivcell .no{background:var(--surface-2);color:var(--muted)}
 /* 로그인 */
 .login{max-width:420px;margin:40px auto;display:flex;flex-direction:column;gap:6px}
 .login h2{margin:0;font-size:20px}.login p{margin:0 0 8px;color:var(--muted);font-size:13px}
@@ -338,20 +345,19 @@ tr.click{cursor:pointer}
    이 값들은 공개되어도 되는 값입니다. 데이터는 로그인한 면접관만 읽고 쓸 수 있도록
    firestore.rules 의 보안 규칙으로 막혀 있습니다. */
 const FIREBASE_CONFIG = {
- apiKey: "AIzaSyDgry_aCb6c6_-yaDbnxDCsfBm8qy8XYbQ",
-
-  authDomain: "k-newdeal-interview.firebaseapp.com",
-
-  projectId: "k-newdeal-interview",
-
-  storageBucket: "k-newdeal-interview.firebasestorage.app",
-
-  messagingSenderId: "361496767335",
-
-  appId: "1:361496767335:web:68ba6e4249e445e3a65dc2",
-
-
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
 };
+/* 운영 담당자(관리자) 이메일 — 전체 교육생·취합 현황·결과지·명단 관리를 볼 수 있습니다.
+   여기에 없는 계정은 '면접관'으로, 명단에서 본인 이메일이 지정된 교육생만 보입니다.
+   firestore.rules 의 isAdmin() 목록과 똑같이 맞춰 주세요. 소문자로 적습니다. */
+const ADMIN_EMAILS = [
+  "이진님_로그인_이메일을_여기에",   // ← 이진 프로가 로그인할 이메일로 바꾸세요 (소문자)
+];
 </script>
 <script>
 (() => {
@@ -454,7 +460,7 @@ const S = {
   draft:null, dirty:false, saving:false, saveMsg:'', saveErr:false,
   resultSel:null, finalDraft:null, finalDirty:false, finalTop:null,
   timer:{start:null, elapsed:0, run:false},
-  rosterConfirm:null, casePool:null,
+  rosterConfirm:null, casePool:null, me:null,
 };
 const LS = {get(k,d){try{const v=localStorage.getItem('kmi:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
             set(k,v){try{localStorage.setItem('kmi:'+k,JSON.stringify(v))}catch(e){}}};
@@ -471,6 +477,8 @@ function conv(scores, items){ // 1~5점 × 배점 ÷ 5
   for(const it of items){const v=scores?.[it.k]; if(v){sum+=v*it.w/5; filled++;}}
   return {total:sum, filled, complete:filled===items.length};
 }
+const isInterviewerOnly = () => !!S.me && !S.me.admin;
+const normEmails = v => [...new Set(String(v||'').split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(x=>x.includes('@')))];
 function isScored(e){return !!e && (Object.keys(e.scores||{}).length>0 || Object.keys(e.caseScores||{}).length>0 || !!e.strengths || !!e.improve)}
 function EV(sid,r){const e=S.evals[sid+'__'+r]; return isScored(e)?e:null}
 function evalsOf(sid){return ['hr','tech'].map(r=>EV(sid,r)).filter(Boolean)}
@@ -494,9 +502,9 @@ function aggregate(sid){
 function sortedStudents(){
   return Object.entries(S.students).map(([id,s])=>({id,...s}))
     .filter(s=>S.campus==='all'||s.campus===S.campus)
-    .sort((a,b)=>(a.campus||'').localeCompare(b.campus||'')||(a.slot||'99').localeCompare(b.slot||'99')||(a.room||'').localeCompare(b.room||'')||(a.team||'').localeCompare(b.team||'','ko')||(a.name||'').localeCompare(b.name||'','ko'));
+    .sort((a,b)=>(a.campus||'').localeCompare(b.campus||'')||(a.date||'').localeCompare(b.date||'')||(a.slot||'99').localeCompare(b.slot||'99')||(a.room||'').localeCompare(b.room||'')||(a.team||'').localeCompare(b.team||'','ko')||(a.name||'').localeCompare(b.name||'','ko'));
 }
-function blankDraft(){return {interviewer:LS.get('iv:'+S.role,''), scores:{}, caseScores:{}, notes:{}, strengths:'', improve:'', oneLine:'',
+function blankDraft(){const st=S.students[S.sel]; return {interviewer:(st&&st[S.role==='tech'?'ivTech':'ivHr'])||LS.get('iv:'+S.role,''), scores:{}, caseScores:{}, notes:{}, strengths:'', improve:'', oneLine:'',
   nv:{}, habitWords:'', top3:['','',''], prepQs:'', jobs:[], jobNote:'', followups:''}}
 function loadDraft(){
   if(!S.sel){S.draft=null;return}
@@ -513,7 +521,8 @@ function markDirty(){S.dirty=true; S.saveErr=false; S.saveMsg='저장하지 않�
 
 /* ───────── 렌더 ───────── */
 function render(){
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===S.view));
+  if(isInterviewerOnly()) S.view='input';
+  document.querySelectorAll('nav.tabs button').forEach(b=>{ b.setAttribute('aria-selected',b.dataset.view===S.view); b.hidden = isInterviewerOnly() && b.dataset.view!=='input'; });
   const m=$('#main');
   const banner = S.demo?`<div class="banner"><b>예시 화면</b> — Firebase 설정 전이라 예시 교육생 3명으로 보여 드립니다. 입력한 내용은 저장되지 않습니다. (설정 방법은 README 참고)</div>`:'';
   if(S.view==='input') m.innerHTML = banner+viewInput();
@@ -527,16 +536,19 @@ function campusSeg(){
   return `<div class="seg" role="group" aria-label="캠퍼스">${[['all','전체'],['홍대','서울 홍대'],['천안','천안']].map(([v,l])=>`<button data-act="campus" data-v="${v}" aria-pressed="${S.campus===v}">${l}</button>`).join('')}</div>`;
 }
 function emptyRoster(){
+  if(isInterviewerOnly()) return `<div class="card empty"><p><b>배정된 교육생이 없습니다.</b></p><p>${esc(S.me.email)} 계정에 지정된 교육생이 아직 없습니다. 운영 담당자에게 명단에서 면접관 이메일을 지정해 달라고 요청하세요.</p></div>`;
   return `<div class="card empty"><p><b>등록된 교육생이 없습니다.</b></p><p>‘교육생 명단’ 탭에서 이름과 면접 시간을 붙여넣어 등록하면 면접관 모두에게 같은 명단이 보입니다.</p><button class="btn primary" data-act="go" data-v="roster">명단 등록하기</button></div>`;
 }
 
 function viewInput(){
-  const list = sortedStudents().filter(s=>!S.search||s.name?.includes(S.search));
+  const hasMine = !!S.me?.admin && Object.values(S.students).some(s=>(s.interviewers||[]).includes(S.me.email));
+  const mineOnly = hasMine && S.mineOnly!==false;
+  const list = sortedStudents().filter(s=>(!S.search||s.name?.includes(S.search)) && (!mineOnly||(s.interviewers||[]).includes(S.me.email)));
   if(!Object.keys(S.students).length) return S.ready?emptyRoster():`<div class="card empty">명단을 불러오는 중…</div>`;
   const items = list.map(s=>`<li><button data-act="sel" data-v="${s.id}" aria-current="${S.sel===s.id}">
      <span class="slot">${esc(s.slot||(s.team||'').replace('회차 ','-').replace('조',''))}</span><span class="nm">${esc(s.name)}</span>
      <span class="dots">${['hr','tech'].map(r=>`<span class="dot ${EV(s.id,r)?'on':S.evals[s.id+'__'+r]?'prep':''}" title="${ROLES[r].name} ${EV(s.id,r)?'평가 입력 완료':S.evals[s.id+'__'+r]?'사전 질문만 작성':'미입력'}">${ROLES[r].tag}</span>`).join('')}</span></button></li>`).join('');
-  const roster = `<aside class="roster"><div class="roster-head">${campusSeg()}<input type="text" id="q" placeholder="이름 검색" value="${esc(S.search)}" aria-label="이름 검색"></div>
+  const roster = `<aside class="roster"><div class="roster-head">${hasMine?`<div class="seg" role="group" aria-label="보기 범위"><button data-act="mine" data-v="1" aria-pressed="${mineOnly}">내 담당</button><button data-act="mine" data-v="0" aria-pressed="${!mineOnly}">전체 교육생</button></div>`:''}${campusSeg()}<input type="text" id="q" placeholder="이름 검색" value="${esc(S.search)}" aria-label="이름 검색"></div>
     <ul>${items||'<li class="empty">해당 교육생이 없습니다</li>'}</ul></aside>`;
   return `<div class="split">${roster}<section class="sheet">${S.sel&&S.students[S.sel]?evalForm():`<div class="card empty">왼쪽 목록에서 면접할 교육생을 선택하세요.<br><small>H = 인사 면접관, T = 실무 면접관 · 초록은 평가 입력 완료, 파랑은 사전 질문만 작성</small></div>`}</section></div>`;
 }
@@ -573,7 +585,7 @@ function evalForm(){
       <label class="f" style="margin-top:10px">관찰 메모<textarea id="note-${x.k}" data-note="${x.k}" placeholder="답변 요지, 인상적인 표현, 아쉬운 점을 적어 두세요">${esc(d.notes[x.k]||'')}</textarea></label></div>`;}).join('');
   const t=S.timer, el=curElapsed();
   return `<div class="card">
-    <div class="who"><div class="person"><h2>${esc(s.name)}</h2><p>${esc(s.campus==='홍대'?'서울 홍대':s.campus||'')}${s.slot?' · '+esc(s.slot):''}${s.room?' · '+esc(s.room):''}${s.team?' · '+esc(s.team):''}${s.panel?' · 면접관 '+esc(s.panel):''}${s.project?`<br><span class="proj">캡스톤 과제 · ${esc(s.project)}</span>`:''}${isScored(oe)?` · <span class="pill good">${ROLES[other].short} 입력 완료 (${esc(oe.interviewer||'')})</span>`:''}</p></div>
+    <div class="who"><div class="person"><h2>${esc(s.name)}</h2><p>${esc(s.campus==='홍대'?'서울 홍대':s.campus||'')}${s.date?' · '+esc(s.date):''}${s.slot?' '+esc(s.slot):''}${s.room?' · '+esc(s.room):''}${s.team?' · '+esc(s.team):''}${s.ivTech?' · 실무 '+esc(s.ivTech):''}${s.ivHr?' · 인사 '+esc(s.ivHr):''}${s.project?`<br><span class="proj">캡스톤 과제 · ${esc(s.project)}</span>`:''}${isScored(oe)?` · <span class="pill good">${ROLES[other].short} 입력 완료 (${esc(oe.interviewer||'')})</span>`:''}</p></div>
       <div class="ctl"><div class="seg" role="group" aria-label="면접관 역할">${['hr','tech'].map(r=>`<button data-act="role" data-v="${r}" aria-pressed="${S.role===r}">${ROLES[r].name}</button>`).join('')}</div>
       <label class="f">면접관 이름<input type="text" id="iv" value="${esc(d.interviewer)}" placeholder="예: 김OO"></label></div></div>
     <div class="timer"><span class="clock" id="clock">${clockStr(el)}</span>
@@ -764,8 +776,13 @@ function viewRoster(){
      <div class="row" style="margin-top:10px"><button class="btn primary" data-act="bulkAdd">등록</button><small id="bulkMsg" style="color:var(--muted)"></small></div>
      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
        <span class="flbl">명단 파일 불러오기</span>
-       <p style="margin:0 0 8px;color:var(--muted);font-size:12.5px">운영 담당자가 받은 명단 파일(.json)을 고르면 교육생이 한 번에 등록됩니다. 이미 있는 교육생은 같은 내용으로 덮어씁니다.</p>
+       <p style="margin:0 0 8px;color:var(--muted);font-size:12.5px">운영 담당자가 받은 명단 파일(.json)을 고르면 교육생이 한 번에 등록됩니다. 이미 있는 교육생은 명단 정보만 새로 고치고, 배정된 케이스와 연결된 계정은 그대로 둡니다.</p>
        <input type="file" id="rosterFile" accept=".json,application/json"> <small id="importMsg" style="color:var(--muted)"></small></div></div>
+   <div class="card"><h3 style="margin:0 0 4px">면접관 계정 연결</h3>
+     <p style="margin:0 0 12px;color:var(--muted);font-size:13px">면접관마다 로그인 이메일을 적고 <b>연결</b>을 누르면, 그 면접관이 맡은 교육생 모두에게 한 번에 지정됩니다. 면접관은 로그인하면 본인 담당 교육생만 보이고, 실무·인사 역할과 이름도 자동으로 채워집니다.</p>
+     <div class="ivgroups">${ivPeople().map(g=>`<div class="ivg"><div class="ivg-l"><b>${esc(g.name)} 프로</b><small>${g.roles.join('·')} · ${g.count}명${g.campuses.length?' · '+g.campuses.join('·'):''}${g.linked?'':' · <span class="gap">미연결</span>'}</small></div>
+       <input type="text" id="ivp-${g.key}" value="${esc(g.email)}" placeholder="${g.mixed?'학생마다 다름 — 다시 입력하세요':'interviewer@example.com'}" aria-label="${esc(g.name)} 로그인 이메일" inputmode="email">
+       <button class="btn" data-act="ivpApply" data-v="${g.key}">연결</button></div>`).join('')||'<p class="empty">면접관 정보가 들어 있는 명단을 먼저 불러오세요.</p>'}</div></div>
    <div class="card"><h3 style="margin:0 0 4px">케이스 배정</h3>
      <p style="margin:0 0 12px;color:var(--muted);font-size:13px">${S.campus==='all'?'전체':S.campus==='홍대'?'서울 홍대':'천안'} 교육생 기준입니다. 오른쪽 표에서 한 명씩 바꿀 수도 있습니다.</p>
      <div class="ccounts">${CASES.map(c=>`<div><span class="cno">${c.no}</span><span>${esc(c.type)}</span><b class="num">${ccount[c.id]}</b></div>`).join('')}<div class="${unassigned?'warn':''}"><span class="cno">–</span><span>미배정</span><b class="num">${unassigned}</b></div></div>
@@ -777,10 +794,11 @@ function viewRoster(){
      <div class="row"><button class="btn" data-act="assignCsv">배정표 CSV</button><small style="color:var(--muted)">케이스지는 출력용 PPT로 따로 준비했습니다.</small></div></div>
    </div>
    <div class="card" style="padding:0;min-width:0"><div style="padding:14px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid var(--line)"><h3 style="margin:0;flex:1">등록 현황 <span class="num" style="color:var(--muted);font-size:13px;font-weight:500">홍대 ${counts.홍대||0}명 · 천안 ${counts.천안||0}명</span></h3>${campusSeg()}</div>
-     <div style="overflow-x:auto;max-height:720px"><table style="min-width:520px"><thead><tr><th>캠퍼스</th><th>시간·조</th><th>이름</th><th>면접실·과제</th><th>케이스</th><th></th></tr></thead><tbody>
+     <div style="overflow-x:auto;max-height:720px"><table style="min-width:700px"><thead><tr><th>캠퍼스</th><th>시간·조</th><th>이름</th><th>면접실·과제</th><th>면접관 <small style="font-weight:500">(초록 = 계정 연결됨)</small></th><th>케이스</th><th></th></tr></thead><tbody>
      ${list.map(s=>`<tr><td>${esc(s.campus)}</td><td class="num">${esc(s.slot||s.team||'')}</td><td>${esc(s.name)}</td><td style="white-space:normal;min-width:160px">${esc(s.room||'')}${s.project?`<small style="color:var(--muted)">${esc(s.project)}</small>`:''}</td>
+       <td class="ivcell">${s.ivTech?`<span class="${s.ivTechEmail?'ok':'no'}">실무 ${esc(s.ivTech)}</span>`:''}${s.ivHr?`<span class="${s.ivHrEmail?'ok':'no'}">인사 ${esc(s.ivHr)}</span>`:''}${!s.ivTech&&!s.ivHr?`<span class="no">${(s.interviewers||[]).map(esc).join(', ')||'미지정'}</span>`:''}</td>
        <td><select class="case-sel" id="case-${s.id}" data-assign="${s.id}" aria-label="${esc(s.name)} 케이스"><option value="">미배정</option>${CASES.map(c=>`<option value="${c.id}" ${s.caseId===c.id?'selected':''}>${c.no}. ${esc(c.type)}</option>`).join('')}</select></td>
-       <td style="text-align:right">${S.rosterConfirm===s.id?`<span class="confirm">평가도 함께 삭제됩니다 <button class="btn danger" data-act="del" data-v="${s.id}">삭제</button><button class="btn ghost" data-act="delCancel">취소</button></span>`:`<button class="btn ghost" data-act="delAsk" data-v="${s.id}">삭제</button>`}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">아직 등록된 교육생이 없습니다</td></tr>'}
+       <td style="text-align:right">${S.rosterConfirm===s.id?`<span class="confirm">평가도 함께 삭제됩니다 <button class="btn danger" data-act="del" data-v="${s.id}">삭제</button><button class="btn ghost" data-act="delCancel">취소</button></span>`:`<button class="btn ghost" data-act="delAsk" data-v="${s.id}">삭제</button>`}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">아직 등록된 교육생이 없습니다</td></tr>'}
      </tbody></table></div></div></div>`;
 }
 async function importRoster(file){
@@ -790,9 +808,31 @@ async function importRoster(file){
   if(S.demo){ list.forEach(x=>S.students[x.id]=x.data); render(); return; }
   msg.textContent=`${list.length}명 등록 중…`;
   let ok=0;
-  for(const x of list){ try{ await S.db.doc('students/'+x.id).set(x.data); ok++; msg.textContent=`${ok}/${list.length}명 등록 중…`; }
+  for(const x of list){ try{ await S.db.doc('students/'+x.id).set(x.data,{merge:true}); ok++; msg.textContent=`${ok}/${list.length}명 등록 중…`; }
     catch(err){ msg.textContent=isDenied(err)?'등록 권한이 없습니다. 로그인 상태를 확인해 주세요.':'일부를 등록하지 못했습니다. 다시 시도해 주세요.'; return; } }
   msg.textContent=`${ok}명을 등록했습니다`; toast(`명단 ${ok}명을 불러왔습니다`);
+}
+function ivPeople(){
+  const m=new Map(), all=Object.values(S.students);
+  for(const s of all){ for(const [f,role] of [['ivTech','실무'],['ivHr','인사']]){ const n=s[f]; if(!n) continue;
+      if(!m.has(n)) m.set(n,{name:n, key:'p'+(m.size+1), roles:new Set(), campuses:new Set(), count:0, emails:new Set()});
+      const g=m.get(n); g.roles.add(role); g.campuses.add(s.campus==='홍대'?'홍대':s.campus); g.count++; g.emails.add(s[f+'Email']||''); } }
+  return [...m.values()].map(g=>{ const em=[...g.emails]; const mixed=em.length>1; return {...g, roles:[...g.roles], campuses:[...g.campuses], mixed, email: mixed?'':em[0], linked:!mixed&&!!em[0]}; })
+    .sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+}
+async function linkInterviewer(name, email){
+  const targets=Object.entries(S.students).filter(([,s])=>s.ivTech===name||s.ivHr===name);
+  let ok=0;
+  for(const [id,s] of targets){
+    const patch={}; if(s.ivTech===name) patch.ivTechEmail=email; if(s.ivHr===name) patch.ivHrEmail=email;
+    const te=patch.ivTechEmail ?? s.ivTechEmail ?? '', he=patch.ivHrEmail ?? s.ivHrEmail ?? '';
+    patch.interviewers=[...new Set([te,he].filter(Boolean))];
+    if(S.demo){ Object.assign(S.students[id],patch); ok++; continue; }
+    try{ await S.db.doc('students/'+id).update(patch); ok++; }
+    catch(err){ toast(isDenied(err)?'면접관 계정을 연결할 권한이 없습니다 (관리자만 가능)':'저장하지 못했습니다. 다시 시도해 주세요'); break; }
+  }
+  if(S.demo) render();
+  return ok;
 }
 async function assignCase(sid, cid){
   if(!S.students[sid]) return;
@@ -847,7 +887,7 @@ document.addEventListener('click', async e=>{
   const act=el.dataset.act, v=el.dataset.v;
   if(act==='campus'){S.campus=v; LS.set('campus',v); S.finalDraft=null; S.resultSel=null; render();}
   else if(act==='go'){S.view=v; render();}
-  else if(act==='sel'){ if(S.sel===v) return; S.sel=v; loadDraft(); render(); if(innerWidth<=860) $('.sheet')?.scrollIntoView({behavior:'smooth'});}
+  else if(act==='sel'){ if(S.sel===v) return; S.sel=v; const st=S.students[v]; if(S.me&&st){ const r=st.ivTechEmail===S.me.email?'tech':st.ivHrEmail===S.me.email?'hr':null; if(r) S.role=r; } loadDraft(); render(); if(innerWidth<=860) $('.sheet')?.scrollIntoView({behavior:'smooth'});}
   else if(act==='role'){ S.role=v; LS.set('role',v); loadDraft(); render();}
   else if(act==='score'){ const f=el.dataset.f,k=el.dataset.k,n=+v; S.draft[f][k] = S.draft[f][k]===n?undefined:n; if(S.draft[f][k]===undefined) delete S.draft[f][k]; markDirty();
       el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===S.draft[f][k]));
@@ -857,6 +897,10 @@ document.addEventListener('click', async e=>{
   else if(act==='case'){ if(S.draft.caseId===v) return; S.draft.caseId=v; markDirty(); assignCase(S.sel,v); const y=scrollY; render(); scrollTo(0,y); }
   else if(act==='pool'){ const p=S.casePool||CASES.map(c=>c.id); const i=p.indexOf(v); if(i<0) p.push(v); else if(p.length>1) p.splice(i,1); S.casePool=p; render(); }
   else if(act==='autoAssign') autoAssign();
+  else if(act==='mine'){ S.mineOnly = v==='1'; render(); }
+  else if(act==='ivpApply'){ const g=ivPeople().find(x=>x.key===v); if(!g) return; const raw=($('#ivp-'+v)?.value||'').trim().toLowerCase();
+      if(raw && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw)){ toast('이메일 형식을 확인해 주세요'); return; }
+      const n=await linkInterviewer(g.name, raw); if(n) toast(raw?`${g.name} 프로 담당 ${n}명을 ${raw}에 연결했습니다`:`${g.name} 프로 계정 연결을 해제했습니다`); }
   else if(act==='caseSheet') downloadCaseSheet(v);
   else if(act==='assignCsv') downloadAssignCSV();
   else if(act==='present') present(caseOf(S.draft.caseId));
@@ -899,7 +943,7 @@ async function saveEval(){
   if(!S.draft||S.saving) return;
   if(!S.draft.interviewer?.trim()){S.saveErr=true; S.saveMsg='면접관 이름을 입력해 주세요'; renderSavebar(); $('#iv')?.focus(); return;}
   const key=S.sel+'__'+S.role;
-  const body={sid:S.sel, role:S.role, interviewer:S.draft.interviewer.trim(), scores:S.draft.scores, caseId:S.draft.caseId, caseScores:Object.fromEntries(Object.entries(S.draft.caseScores).filter(([k])=>caseOf(S.draft.caseId).items.some(i=>i.k===k))), notes:S.draft.notes, strengths:S.draft.strengths||'', improve:S.draft.improve||'', oneLine:S.draft.oneLine||'',
+  const body={sid:S.sel, role:S.role, interviewers:S.students[S.sel]?.interviewers||[], interviewer:S.draft.interviewer.trim(), scores:S.draft.scores, caseId:S.draft.caseId, caseScores:Object.fromEntries(Object.entries(S.draft.caseScores).filter(([k])=>caseOf(S.draft.caseId).items.some(i=>i.k===k))), notes:S.draft.notes, strengths:S.draft.strengths||'', improve:S.draft.improve||'', oneLine:S.draft.oneLine||'',
     nv:S.draft.nv, habitWords:S.draft.habitWords||'', top3:S.draft.top3,
     prepQs:S.draft.prepQs||'', jobs:S.draft.jobs, jobNote:S.draft.jobNote||'', followups:S.draft.followups||'', updatedAt:Date.now()};
   if(S.demo){S.evals[key]=body; S.dirty=false; S.saveMsg='예시 화면이라 이 브라우저에서만 반영됩니다'; render(); return;}
@@ -1014,7 +1058,8 @@ async function connect(){
     const user=await new Promise(res=>{ const un=auth.onAuthStateChanged(u=>{ un(); res(u); }); });
     if(!user){ c.textContent='로그인 필요'; c.className='conn'; loginView(auth); return; }
     db=firebase.firestore();
-    c.innerHTML=`${esc(user.email||'')} · <button class="linkbtn" id="logout">로그아웃</button>`; c.className='conn ok';
+    const email=(user.email||'').toLowerCase(); S.me={email, admin:ADMIN_EMAILS.map(x=>x.toLowerCase()).includes(email)};
+    c.innerHTML=`${esc(email)}${S.me.admin?' · 관리자':''} · <button class="linkbtn" id="logout">로그아웃</button>`; c.className='conn ok';
     $('#logout').addEventListener('click', async()=>{ await auth.signOut(); location.reload(); });
   } else {
     try{ db = await window.claude?.use?.('db'); }catch(e){}
@@ -1031,9 +1076,10 @@ async function connect(){
     if(S.view==='result' && a && (a.id==='finalText'||a.dataset?.ftop!=null)){ return; }
     render();
   };
-  db.collection('students').onSnapshot(snap=>{ S.students={}; snap.docs.forEach(d=>S.students[d.id]=d.data()); if(S.sel&&!S.students[S.sel]){S.sel=null;S.draft=null;} else if(S.draft&&S.students[S.sel]?.caseId&&S.draft.caseId!==S.students[S.sel].caseId){S.draft.caseId=S.students[S.sel].caseId;} settle(); smartRender(); }, fail);
-  db.collection('evals').onSnapshot(snap=>{ S.evals={}; snap.docs.forEach(d=>S.evals[d.id]=d.data()); if(!S.finalDirty) S.finalDraft=null; if(S.sel&&!S.dirty&&!S.draft) loadDraft(); smartRender(); }, fail);
-  db.collection('finals').onSnapshot(snap=>{ S.finals={}; snap.docs.forEach(d=>S.finals[d.id]=d.data()); if(!S.finalDirty) S.finalDraft=null; smartRender(); }, fail);
+  const mine = col => isInterviewerOnly() ? db.collection(col).where('interviewers','array-contains',S.me.email) : db.collection(col);
+  mine('students').onSnapshot(snap=>{ S.students={}; snap.docs.forEach(d=>S.students[d.id]=d.data()); if(S.sel&&!S.students[S.sel]){S.sel=null;S.draft=null;} else if(S.draft&&S.students[S.sel]?.caseId&&S.draft.caseId!==S.students[S.sel].caseId){S.draft.caseId=S.students[S.sel].caseId;} settle(); smartRender(); }, fail);
+  mine('evals').onSnapshot(snap=>{ S.evals={}; snap.docs.forEach(d=>S.evals[d.id]=d.data()); if(!S.finalDirty) S.finalDraft=null; if(S.sel&&!S.dirty&&!S.draft) loadDraft(); smartRender(); }, fail);
+  if(!isInterviewerOnly()) db.collection('finals').onSnapshot(snap=>{ S.finals={}; snap.docs.forEach(d=>S.finals[d.id]=d.data()); if(!S.finalDirty) S.finalDraft=null; smartRender(); }, fail);
 }
 function refreshRosterDots(){
   document.querySelectorAll('.roster li button').forEach(b=>{const id=b.dataset.v; b.querySelectorAll('.dot').forEach((d,i)=>{const r=i?'tech':'hr'; d.classList.toggle('on',!!EV(id,r)); d.classList.toggle('prep',!EV(id,r)&&!!S.evals[id+'__'+r]);})});
