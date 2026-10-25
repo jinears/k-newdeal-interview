@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px;font-family:system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>K-뉴딜 모의면접 피드백</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Nanum+Myeongjo:wght@700;800&display=swap">
+<style>
+/* Layout: 면접 운영 콘솔 — 상단 탭(입력·취합·결과지·명단), 입력 화면은 좌측 교육생 목록 + 우측 평가지. 결과지는 종이 문서처럼. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --surface-2:#eaeef4; --line:#d5dce6; --line-strong:#b4bfcd;
+  --fg:#17202c; --muted:#5a6676; --faint:#8592a3;
+  --accent:#1f4f8a; --accent-ink:#ffffff; --accent-soft:#e1eaf6;
+  --mark:#f2c94c; --mark-soft:#fdf3d2;
+  --good:#1f7a4d; --good-soft:#dff1e7; --warn:#a86108; --warn-soft:#fbecd6; --bad:#b4322c; --bad-soft:#f8e1df;
+  --paper:#fffefb; --paper-line:#e4dfd3;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --f-doc:"Nanum Myeongjo","AppleMyungjo","Batang",serif;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151c; --surface:#171e28; --surface-2:#1f2834; --line:#2c3746; --line-strong:#3f4d60;
+  --fg:#e6ebf2; --muted:#9aa7b8; --faint:#6f7d90;
+  --accent:#7fb0ec; --accent-ink:#0d1a2b; --accent-soft:#1d3048;
+  --mark:#e2b93b; --mark-soft:#3a3220;
+  --good:#5cc690; --good-soft:#163527; --warn:#e7a54a; --warn-soft:#3a2a14; --bad:#ef7b74; --bad-soft:#3e1d1b;
+  --paper:#1b222c; --paper-line:#323c4a; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#10151c; --surface:#171e28; --surface-2:#1f2834; --line:#2c3746; --line-strong:#3f4d60;
+  --fg:#e6ebf2; --muted:#9aa7b8; --faint:#6f7d90;
+  --accent:#7fb0ec; --accent-ink:#0d1a2b; --accent-soft:#1d3048;
+  --mark:#e2b93b; --mark-soft:#3a3220;
+  --good:#5cc690; --good-soft:#163527; --warn:#e7a54a; --warn-soft:#3a2a14; --bad:#ef7b74; --bad-soft:#3e1d1b;
+  --paper:#1b222c; --paper-line:#323c4a; color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.55;}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding-block:12px 0}
+.brand{display:flex;flex-direction:column;min-width:0;flex:1 1 260px}
+.brand small{color:var(--muted);font-size:12px;letter-spacing:.02em}
+.brand h1{margin:0;font-size:18px;font-weight:700;text-wrap:balance}
+.conn{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.conn.ok{background:var(--good-soft);color:var(--good)}
+.conn.demo{background:var(--mark-soft);color:var(--warn)}
+nav.tabs{flex-basis:100%;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs button{border:0;background:none;padding:10px 14px;border-bottom:2.5px solid transparent;color:var(--muted);font-weight:600;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav.tabs button:hover{color:var(--fg)}
+main.wrap{padding-block:20px 120px}
+
+.banner{background:var(--mark-soft);border:1px solid var(--mark);color:var(--fg);padding:10px 14px;border-radius:var(--r);margin-bottom:16px;font-size:13px}
+
+.btn{border:1px solid var(--line-strong);background:var(--surface);padding:7px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input[type=text],select,textarea{background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:7px 10px;width:100%}
+textarea{resize:vertical;min-height:72px;line-height:1.55}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 12px;cursor:pointer;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line-strong)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+/* 입력 화면 */
+.split{display:grid;grid-template-columns:280px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+.roster{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);position:sticky;top:calc(env(safe-area-inset-top,0px) + 110px);max-height:calc(100vh - 140px);display:flex;flex-direction:column}
+@media (max-width:860px){.roster{position:static;max-height:340px}}
+.roster-head{padding:12px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
+.roster ul{list-style:none;margin:0;padding:4px;overflow-y:auto}
+.roster li button{width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:6px;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
+.roster li button:hover{background:var(--surface-2)}
+.roster li button[aria-current="true"]{background:var(--accent-soft)}
+.roster .slot{font-family:var(--f-mono);font-size:12px;color:var(--faint);width:38px}
+.roster .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dots{display:flex;gap:3px}
+.dot{font-size:10px;font-weight:700;width:18px;height:18px;border-radius:4px;display:grid;place-items:center;background:var(--surface-2);color:var(--faint)}
+.dot.on{background:var(--good-soft);color:var(--good)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+
+.sheet{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.who{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end}
+.who .person{flex:1 1 200px;min-width:0}
+.who .person h2{margin:0;font-size:22px}
+.who .person p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.who .ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.who .ctl label.f{width:150px}
+
+.timer{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.clock{font-family:var(--f-mono);font-size:22px;font-weight:600;min-width:72px}
+.track{flex:1 1 300px;display:flex;height:28px;border-radius:5px;overflow:hidden;position:relative;background:var(--surface-2);min-width:0}
+.track span{display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);border-right:1px solid var(--bg);white-space:nowrap;overflow:hidden;position:relative;z-index:1}
+.track span.now{color:var(--fg);font-weight:700}
+.track .fill{position:absolute;inset:0 auto 0 0;background:var(--accent-soft);z-index:0;transition:width .5s linear}
+
+.sec h3{margin:0;font-size:15px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.sec h3 .t{font-family:var(--f-mono);font-size:12px;color:var(--accent);font-weight:600;background:var(--accent-soft);padding:1px 7px;border-radius:4px}
+.sec h3 .focus{font-size:12px;color:var(--muted);font-weight:500}
+.sec details{margin:10px 0}
+.sec summary{cursor:pointer;font-size:13px;color:var(--accent);font-weight:600}
+.sec .guide{margin:8px 0 0;padding:10px 14px;background:var(--surface-2);border-radius:6px;font-size:13px}
+.sec .guide ul{margin:0;padding-left:18px}
+.sec .guide li{margin:3px 0}
+.sec .guide .tip{margin:8px 0 0;color:var(--muted)}
+.casebox{border-left:3px solid var(--mark);background:var(--mark-soft);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;margin:10px 0}
+.casebox ol{margin:6px 0 0;padding-left:18px}
+
+.rubric{display:flex;flex-direction:column;margin-top:8px}
+.rrow{display:grid;grid-template-columns:minmax(0,1fr) auto 56px;gap:10px 14px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.rrow:first-child{border-top:0}
+.rrow .lbl b{display:block;font-size:14px}
+.rrow .lbl small{color:var(--muted);font-size:12px;display:block}
+.rrow .lbl .w{font-family:var(--f-mono);font-size:11px;color:var(--faint);margin-left:6px;font-weight:500}
+.rrow .lbl .mine{font-size:11px;color:var(--accent);margin-left:6px;font-weight:600}
+.pick{display:flex;gap:4px}
+.pick button{width:34px;height:34px;border:1px solid var(--line-strong);background:var(--surface);border-radius:6px;cursor:pointer;font-family:var(--f-mono);font-weight:600}
+.pick button:hover{border-color:var(--accent)}
+.pick button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.rrow .pts{text-align:right;font-family:var(--f-mono);font-weight:600}
+.rrow .pts small{color:var(--faint);font-weight:500}
+@media (max-width:560px){.rrow{grid-template-columns:minmax(0,1fr) 56px}.rrow .pick{grid-column:1/-1;order:3}}
+.scale-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-top:6px}
+.scale-legend b{font-family:var(--f-mono);color:var(--fg)}
+.subtotal{display:flex;justify-content:space-between;align-items:baseline;padding-top:10px;border-top:2px solid var(--fg);margin-top:4px;font-weight:700}
+.subtotal .num{font-size:20px}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.savebar .wrap{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap;padding-block:10px}
+.savebar .score{display:flex;gap:18px;align-items:baseline}
+.savebar .score span{font-size:12px;color:var(--muted)}
+.savebar .score b{font-family:var(--f-mono);font-size:20px;margin-left:4px}
+.savebar .st{flex:1;font-size:12px;color:var(--muted);min-width:120px}
+.savebar .st.dirty{color:var(--warn)}
+.savebar .st.err{color:var(--bad)}
+
+/* 취합 */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.toolbar .grow{flex:1}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.stat small{color:var(--muted);font-size:12px;display:block}
+.stat b{font-family:var(--f-mono);font-size:24px}
+.stat b em{font-style:normal;font-size:13px;color:var(--faint);font-weight:500}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:880px;font-size:13px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;color:var(--muted);font-weight:600;background:var(--surface-2);letter-spacing:.02em;position:sticky;top:0}
+td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+tr:hover td{background:var(--surface-2)}
+tr.click{cursor:pointer}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.gap{color:var(--warn);font-weight:700}
+
+/* 결과지 */
+.result-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+@media (max-width:960px){.result-layout{grid-template-columns:minmax(0,1fr)}}
+.paper{background:var(--paper);border:1px solid var(--paper-line);border-radius:4px;padding:36px 40px;box-shadow:0 1px 0 var(--paper-line),0 12px 30px -18px rgba(20,30,50,.35);min-width:0}
+@media (max-width:560px){.paper{padding:24px 18px}}
+.paper .eyebrow{font-size:12px;color:var(--muted);letter-spacing:.06em}
+.paper h2{font-family:var(--f-doc);font-size:26px;margin:4px 0 2px;font-weight:800}
+.paper .meta{display:flex;flex-wrap:wrap;gap:4px 18px;color:var(--muted);font-size:13px;padding-bottom:16px;border-bottom:2px solid var(--fg)}
+.paper h4{font-family:var(--f-doc);font-size:16px;margin:26px 0 10px;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.paper h4 .num{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.hero-score{display:flex;flex-wrap:wrap;gap:20px 36px;align-items:flex-end;margin-top:18px}
+.hero-score .big{font-family:var(--f-mono);font-size:52px;font-weight:600;line-height:1}
+.hero-score .big small{font-size:18px;color:var(--faint)}
+.hero-score .side{display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--muted)}
+.hero-score .side b{color:var(--fg)}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr) 92px;gap:12px;align-items:center;font-size:13px}
+@media (max-width:560px){.bar{grid-template-columns:minmax(0,1fr) 84px}.bar .tr{grid-column:1/-1;order:3}}
+.bar .tr{height:10px;background:var(--surface-2);border-radius:99px;position:relative;overflow:hidden}
+.bar .tr i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:99px}
+.bar .tr i.low{background:var(--warn)}
+.bar .v{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.bar .v small{color:var(--faint)}
+.fb{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.fb > div{border-top:1px solid var(--paper-line);padding-top:8px}
+.fb h5{margin:0 0 6px;font-size:13px}
+.fb .strong h5{color:var(--good)}
+.fb .grow h5{color:var(--warn)}
+.fb p{margin:0 0 6px;white-space:pre-wrap;font-size:13.5px}
+.fb p .by{font-size:11px;color:var(--faint);margin-right:6px}
+.final-text{white-space:pre-wrap;font-size:14px;line-height:1.75;background:var(--mark-soft);padding:12px 16px;border-radius:4px}
+.paper .foot{margin-top:28px;padding-top:12px;border-top:1px solid var(--paper-line);font-size:12px;color:var(--muted)}
+.side-panel{display:flex;flex-direction:column;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 110px)}
+@media (max-width:960px){.side-panel{position:static}}
+.side-panel .card h3{margin:0 0 8px;font-size:14px}
+.side-panel .card p{margin:0;font-size:12px;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* 명단 */
+.confirm{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--bad)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:13px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+/* 로그인 */
+.login{max-width:420px;margin:40px auto;display:flex;flex-direction:column;gap:6px}
+.login h2{margin:0;font-size:20px}.login p{margin:0 0 8px;color:var(--muted);font-size:13px}
+.login form{display:flex;flex-direction:column;gap:12px}
+.lg-msg{color:var(--bad)!important;min-height:1.2em;margin:0!important}
+.linkbtn{border:0;background:none;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+/* 케이스 */
+.proj{font-size:12.5px;color:var(--accent)}
+.assigned{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:10px}
+.assigned > b{font-size:14px}
+.chg{flex-basis:100%}.chg summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600;width:fit-content}
+.chg-note{margin:6px 0 0;font-size:12px;color:var(--warn)}
+.casebox .ctip{font-size:12.5px;color:var(--muted);border-top:1px dashed var(--mark);padding-top:6px;margin:0 0 8px}
+.ccounts{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.ccounts > div{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:12.5px}
+.ccounts > div.warn{border-color:var(--warn);color:var(--warn)}
+.ccounts .cno{font-family:var(--f-mono);font-weight:600;font-size:12px;width:20px;height:20px;border-radius:4px;display:grid;place-items:center;background:var(--surface-2);color:var(--muted)}
+.ccounts b{font-size:15px}
+.case-sel{padding:4px 8px;font-size:12.5px;min-width:150px}
+.casepick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:10px}
+.casepick button{display:flex;gap:10px;align-items:flex-start;text-align:left;border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r);padding:8px 10px;cursor:pointer}
+.casepick button:hover{border-color:var(--accent)}
+.casepick button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.casepick .cno{font-family:var(--f-mono);font-weight:600;font-size:12px;width:20px;height:20px;border-radius:4px;display:grid;place-items:center;background:var(--surface-2);color:var(--muted);flex:none}
+.casepick button[aria-pressed="true"] .cno{background:var(--accent);color:var(--accent-ink)}
+.casepick b{display:block;font-size:13px}.casepick small{display:block;font-size:11.5px;color:var(--muted);line-height:1.4}
+.case-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.case-head b{font-size:14px}
+.casebox p{margin:6px 0}.casebox .ctime{font-size:12px;color:var(--warn);font-weight:600;margin:2px 0 8px}
+.casebox ol li{margin:4px 0}
+.cfollow{margin-top:8px}.cfollow summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:12.5px}.cfollow ul{margin:6px 0 0;padding-left:18px}
+.ctag{font-family:var(--f-body);font-size:10.5px;color:var(--muted);background:var(--surface-2);border-radius:4px;padding:0 5px;font-weight:600}
+.present{position:fixed;inset:0;z-index:30;background:var(--paper);overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.pv{max-width:900px;margin:0 auto;font-size:clamp(16px,2.2vw,22px);line-height:1.7}
+.pv-top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.pv h2{font-family:var(--f-doc);font-size:clamp(24px,4vw,40px);margin:18px 0 4px;text-wrap:balance}
+.pv-time{color:var(--warn);font-weight:600;font-size:.8em;margin:0 0 20px}
+.pv-sit{border:2px solid var(--fg);padding:16px 22px;margin-bottom:20px}
+.pv-sit b,.pv-q > b{display:block;margin-bottom:6px}
+.pv-sit p{margin:6px 0}
+.pv-q{background:var(--surface-2);border:2px solid var(--fg);padding:16px 22px}
+.pv-q ol{margin:0;padding-left:1.4em}.pv-q li{margin:12px 0}
+/* 추가 항목 */
+.card.prep{border-color:var(--accent);background:linear-gradient(var(--accent-soft),var(--accent-soft)) top/100% 3px no-repeat,var(--surface)}
+.other-prep{margin-top:10px;padding:10px 14px;border:1px dashed var(--line-strong);border-radius:6px;font-size:13px}
+.other-prep ol,.preplist ol{margin:6px 0 0;padding-left:20px}.other-prep li,.preplist li{margin:3px 0}
+.preplist{margin:10px 0 0;padding:10px 14px;background:var(--accent-soft);border-radius:6px;font-size:13px}
+.pl-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--accent);background:var(--surface);border-radius:4px;padding:0 6px;margin-right:6px}
+.pl-empty{color:var(--muted)}
+.dot.prep{background:var(--accent-soft);color:var(--accent)}
+.wguide{margin:8px 0 12px}
+.wguide summary{cursor:pointer;font-size:13px;color:var(--accent);font-weight:600;width:fit-content}
+.wg{margin-top:8px;padding:10px 14px;background:var(--surface-2);border-radius:6px;font-size:13px}
+.wg ul{margin:0;padding-left:18px}.wg li{margin:4px 0}.wg p{margin:6px 0}
+.wg .ex{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:6px 0}
+.wg .ex span{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:4px;margin-right:8px}
+.wg .ex .x{background:var(--bad-soft);color:var(--bad)}.wg .ex .o{background:var(--good-soft);color:var(--good)}
+.hint{font-size:12px;color:var(--muted);font-weight:500;margin-left:8px}
+.flbl{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.flbl small{font-weight:500}
+.nv{display:flex;flex-direction:column;margin-top:6px}
+.nvrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:9px 0;border-top:1px solid var(--line)}
+.nvrow:first-child{border-top:0}
+.nvrow > b{width:72px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--line-strong);background:var(--surface);border-radius:99px;padding:5px 13px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
+.chips button:hover{border-color:var(--accent);color:var(--fg)}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chips button.good[aria-pressed="true"]{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.chips button.bad[aria-pressed="true"]{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.topin{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:center;margin-top:6px}
+.topin .no{width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:700;font-family:var(--f-mono)}
+.top3 small{font-size:11px;color:var(--muted);letter-spacing:.04em;font-weight:600}
+.top3{background:var(--mark-soft);border-radius:6px;padding:12px 16px}
+.top3 ol{margin:6px 0 0;padding-left:20px;font-size:14.5px;font-weight:600}
+.top3 li{margin:4px 0}
+.nvgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 28px}
+.nvline{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dotted var(--paper-line);font-size:13.5px;flex-wrap:wrap}
+.nvline small{color:var(--faint);font-size:11px}
+.nvchip{display:inline-block;font-size:12px;font-weight:700;padding:1px 9px;border-radius:99px}
+.nvchip.good{background:var(--good-soft);color:var(--good)}
+.nvchip.bad{background:var(--warn-soft);color:var(--warn)}
+.habits{font-size:13px;color:var(--muted);margin:10px 0 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.habits span{background:var(--surface-2);color:var(--fg);padding:1px 8px;border-radius:4px;font-size:12.5px}
+.jobchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.jobchips span{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.fb ol{margin:0;padding-left:18px;font-size:13.5px}
+.fb li{margin:4px 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <small>K-뉴딜 아카데미 · AI 에이전트 기반 서비스 개발 과정</small>
+      <h1>모의면접 피드백 보드</h1>
+    </div>
+    <span class="conn" id="conn">연결 중…</span>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-view="input" aria-selected="true">평가 입력</button>
+      <button role="tab" data-view="summary" aria-selected="false">취합 현황</button>
+      <button role="tab" data-view="result" aria-selected="false">결과지</button>
+      <button role="tab" data-view="roster" aria-selected="false">교육생 명단</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+<div class="savebar" id="savebar" hidden></div>
+<div class="present" id="present" hidden></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ───────── Firebase 설정 ─────────
+   Firebase 콘솔 → 프로젝트 설정(톱니바퀴) → 일반 → 내 앱 → 웹 앱의 firebaseConfig 값을 그대로 붙여넣으세요.
+   이 값들은 공개되어도 되는 값입니다. 데이터는 로그인한 면접관만 읽고 쓸 수 있도록
+   firestore.rules 의 보안 규칙으로 막혀 있습니다. */
+const FIREBASE_CONFIG = {
+ apiKey: "AIzaSyDgry_aCb6c6_-yaDbnxDCsfBm8qy8XYbQ",
+
+  authDomain: "k-newdeal-interview.firebaseapp.com",
+
+  projectId: "k-newdeal-interview",
+
+  storageBucket: "k-newdeal-interview.firebasestorage.app",
+
+  messagingSenderId: "361496767335",
+
+  appId: "1:361496767335:web:68ba6e4249e445e3a65dc2",
+
+
+};
+</script>
+<script>
+(() => {
+/* ───────── 운영안 기준 데이터 ───────── */
+const COMMON = [
+  {k:'comm',  name:'의사소통 및 자기표현',        w:15, role:'hr',   desc:'질문을 이해하고 핵심을 논리적이고 명확하게 전달하는가?'},
+  {k:'prob',  name:'문제 해결 및 논리적 사고',     w:25, role:'tech', desc:'문제를 구조화하고 실행 가능한 대안을 제시하는가?'},
+  {k:'ai',    name:'AI·개발 직무 관심 및 학습 역량', w:25, role:'tech', desc:'기술에 대한 관심, 실제 경험, 학습·검증·개선 의지가 있는가?'},
+  {k:'init',  name:'주도성 및 책임감',            w:15, role:'hr',   desc:'본인의 역할과 행동을 구체적으로 설명하고 결과에 책임지는가?'},
+  {k:'collab',name:'협업 및 조직 적응 역량',       w:10, role:'hr',   desc:'타인의 관점을 존중하고 협력적으로 문제를 해결하는가?'},
+  {k:'motiv', name:'지원 동기 및 성장 가능성',     w:10, role:'hr',   desc:'지원 이유가 구체적이고 향후 성장 방향이 있는가?'},
+];
+const CASES = [
+ {id:'sec', no:'1', type:'보안·리스크 설계', short:'보안', title:'사내 지식검색 AI Agent의 보안 통제 설계', time:'케이스 읽기 1분 · 답변 3분 · 후속 질문 2분',
+  situation:['당신은 사내 지식검색용 AI Agent 개발 프로젝트에 참여한 신입 개발자입니다. 이 Agent는 사용자가 자연어로 질문하면 사내 문서, 프로젝트 자료, 기술 가이드, 회의록 등을 검색하여 답변합니다.',
+   '테스트 과정에서 일반 직원이 “임원회의 자료 요약해줘”라고 질문했을 때, 권한이 없는 문서의 일부 내용이 답변에 포함될 수 있는 위험이 발견되었습니다.',
+   '보안팀은 “AI Agent가 기존 시스템의 접근 권한 체계를 우회할 수 있다”며 강하게 우려하고 있습니다.'],
+  qs:[['위험 분석','현재 발생 가능한 보안 위험과 그 원인, 예상되는 영향을 구조화하여 설명해 주십시오.'],
+      ['설계 방안','사용자 권한에 따라 AI Agent가 접근할 수 있는 문서와 답변 범위를 제한하기 위한 설계 방안을 단계별로 설명해 주십시오.'],
+      ['운영 제안','보안팀이 사내 문서 검색에 AI Agent를 사용해서는 안 된다고 주장한다면, 보안 통제를 전제로 한 안전한 운영 방안을 어떻게 제안하겠습니까?']],
+  items:[
+   {k:'risk',  name:'위험 분석 및 문제 정의',   w:20, desc:'권한 없는 문서 노출, 요약·추론에 의한 간접 유출, 캐시·답변 재사용 위험을 파악하는가'},
+   {k:'tech',  name:'기술적 해결 방안',        w:30, desc:'사용자 인증, 문서별 권한 메타데이터, 검색 단계 권한 필터링, 답변 검증 등 구체적 통제 방안을 제시하는가'},
+   {k:'prio',  name:'문제해결 및 우선순위 설정', w:20, desc:'권한 정보가 불완전한 문서 처리, 위험도별 우선순위, 테스트·단계적 출시 방안을 제시하는가'},
+   {k:'logic', name:'논리적 의사소통 및 설득',   w:15, desc:'근거와 함께 설명하고 보안팀과 현업의 우려를 균형 있게 다루는가'},
+   {k:'resp',  name:'책임감 및 협업 태도',      w:15, desc:'위험을 숨기거나 무리하게 출시하지 않고, 관련 부서 협의·사고 대응까지 고려하는가'}],
+  follow:['권한 메타데이터가 없는 문서는 기본적으로 어떻게 처리하겠습니까?','답변이 여러 문서를 요약한 결과라면, 권한 검사는 어느 시점에 해야 합니까?']},
+ {id:'a', no:'2', type:'서비스 출시 기획', short:'출시', title:'사내 규정 RAG 챗봇 출시 준비', time:'케이스 읽기 1분 · 본인 답변 5분 (네 가지를 순서대로)',
+  situation:['우리 팀은 사내 규정·매뉴얼 PDF를 올려 두고, 직원이 질문하면 답해 주는 AI 챗봇을 만들려 합니다. 방식은 RAG(관련 문단을 찾은 뒤 AI가 답을 생성)입니다.','아직 출시 전이며, 예산·일정은 보통 수준입니다.',
+   '보안 담당자는 「잘못된 답이 나오면 안 된다」고 주장하고, 현업은 「빨리 써 보고 싶다」고 합니다.'],
+  qs:[['목표','이 챗봇이 사용자에게 꼭 해 주어야 하는 일 1가지와, 하지 말아야 할 일 1가지'],
+      ['출시 전 준비','출시 전에 반드시 해야 할 것 3가지 (기술·사람·프로세스 무엇이든)'],
+      ['위험','가장 걱정되는 사고 유형 1가지와, 그걸 줄이는 방법 1가지'],
+      ['성공 기준','「잘 만들었다」고 말할 수 있는 기준 1가지 (숫자 없어도 됩니다)']],
+  items:[
+   {k:'a_goal', name:'목표 정의',           w:20, desc:'사용자 관점에서 해야 할 일·하지 말아야 할 일을 구체적으로 정하는가 (예: 근거 문서를 보여 주며 답함 / 문서에 없는 내용은 추측하지 않음)'},
+   {k:'a_prep', name:'출시 전 준비의 실행성', w:25, desc:'문서 최신화·정리, 테스트 질문 세트, 담당 부서 검수, 피드백 창구 등 기술·사람·프로세스를 고르게 현실적으로 제시하는가'},
+   {k:'a_risk', name:'위험 인식과 완화',     w:25, desc:'잘못된 답(환각), 개정 전 규정 인용, 민감 정보 노출 등 구체적 사고 유형과 출처 표시·답변 거절·담당자 연결 같은 대응을 제시하는가'},
+   {k:'a_kpi',  name:'성공 기준 설정',       w:15, desc:'정답률, 담당 부서 문의 감소, 사용자 재이용 등 확인할 수 있는 기준을 제시하는가'},
+   {k:'a_bal',  name:'이해관계 균형',        w:15, desc:'「잘못된 답 금지」와 「빨리 쓰고 싶다」를 함께 다루는가 (예: 일부 부서 시범 운영 후 단계적 확대)'}],
+  follow:['테스트 질문 세트는 누구와 어떻게 만들겠습니까?','규정이 개정되면 챗봇 답변이 최신인지 어떻게 보장하겠습니까?']},
+ {id:'c', no:'3', type:'기술 의사결정', short:'설계', title:'AI가 제안한 구조 재설계 vs 빠른 적용', time:'케이스 읽기 1분 · 답변 3분 · 후속 질문 2분',
+  situation:['AI를 활용해 기능을 개발하던 중, AI가 제안한 A안은 현재 구조 일부를 재설계해야 하지만 장기적인 관점에서 보면 모듈 경계와 유지보수성 측면에서 유리합니다.',
+   'B안은 빠르게 적용할 수 있지만, 이후 유사 기능이 늘면 중복과 의존성이 커질 수 있습니다.'],
+  qs:[['확인할 것','두 안 중 선택하기 전에, 현재 구조와 영향 범위에서 무엇을 확인하시겠습니까?'],
+      ['결정 기준','확인한 내용을 바탕으로 어떤 기준으로 결정하시겠습니까?']],
+  items:[
+   {k:'c_scope', name:'현황·영향 범위 파악',   w:25, desc:'현재 모듈 구조와 의존 관계, 영향받는 호출부·데이터, 테스트 커버리지, 유사 기능 추가 계획 등 확인 항목이 구체적인가'},
+   {k:'c_crit',  name:'의사결정 기준',        w:25, desc:'일정, 리스크, 유지보수 비용, 팀 역량 등 기준을 세우고 트레이드오프를 근거와 함께 설명하는가'},
+   {k:'c_ai',    name:'AI 제안 검증',         w:20, desc:'AI 제안을 그대로 받아들이지 않고 근거 확인, 작은 범위 시험 적용, 코드 리뷰로 검증하는가'},
+   {k:'c_plan',  name:'실행 계획',            w:15, desc:'단계적 리팩터링, B안 선택 시 기술 부채 기록과 상환 시점 등 현실적인 실행 방안을 제시하는가'},
+   {k:'c_comm',  name:'소통과 합의',          w:15, desc:'결정 근거를 팀·리더와 공유하고 문서로 남기는 등 혼자 결정하지 않는가'}],
+  follow:['일정이 이번 주까지라면 어떤 안을 고르고, 무엇을 남겨 두겠습니까?','AI가 제안한 A안이 맞는지 어떻게 검증하겠습니까?']},
+ {id:'d', no:'4', type:'AI 시대 개발자 역할', short:'역할', title:'AI가 코드를 몇 분 만에 짜 준다면', time:'케이스 읽기 1분 · 답변 3분 · 후속 질문 2분',
+  situation:['직접 만든 서비스를 실제 사용자들이 쓰고 있는 상황입니다. 여기에 기능 하나를 추가해 달라는 요청이 왔고, 기간은 일주일입니다.'],
+  qs:[['질문','코드는 AI가 몇 분 만에 다 짜 준다고 한다면, 남은 일주일 동안 개발자로서 뭘 하시겠습니까?']],
+  items:[
+   {k:'d_req',  name:'요구사항 정의',        w:25, desc:'요청자·사용자와 해결하려는 문제, 범위, 완료 기준을 먼저 확인하는가'},
+   {k:'d_des',  name:'설계·영향 검토',       w:20, desc:'기존 기능·데이터·보안·성능에 미치는 영향을 검토하는가'},
+   {k:'d_test', name:'검증·테스트',          w:25, desc:'AI가 만든 코드를 리뷰하고, 예외 상황·기존 사용자 영향(회귀)까지 테스트하는가'},
+   {k:'d_ops',  name:'배포·운영',            w:15, desc:'단계적 배포, 모니터링, 롤백 계획, 사용자 안내를 고려하는가'},
+   {k:'d_role', name:'개발자 역할 인식',     w:15, desc:'AI는 도구이고 결과의 책임은 개발자에게 있다는 관점, 판단·소통의 가치를 설명하는가'}],
+  follow:['AI가 짠 코드에서 문제가 생기면 누구의 책임이라고 생각합니까?','일주일 중 가장 많은 시간을 쓸 단계는 어디이고, 그 이유는?']},
+];
+const CASE_BY = Object.fromEntries(CASES.map(c=>[c.id,c]));
+const caseOf = id => CASE_BY[id] || CASES[0];
+const SCALE = {1:'매우 미흡',2:'미흡',3:'보통',4:'우수',5:'매우 우수'};
+const SCALE_DESC = {
+  1:'질문 의도를 파악하지 못하거나 구체적인 답변 근거가 거의 없음',
+  2:'일부 답변은 가능하나 설명이 모호하거나 근거·실행 방안이 부족함',
+  3:'질문에 적절히 답변하며 기본적인 이해와 사례를 제시함',
+  4:'답변이 구체적이고 논리적이며 본인의 역할과 근거가 명확함',
+  5:'핵심을 명확히 구조화하고 근거·대안·개선 관점을 설득력 있게 제시함'};
+const ROLES = {hr:{name:'인사 면접관', short:'인사', tag:'H'}, tech:{name:'실무 면접관', short:'실무', tag:'T'}};
+const NONVERBAL = [
+  {k:'speed',  name:'말 속도',   opts:['느림','적절','빠름'], good:1},
+  {k:'eye',    name:'시선',      opts:['안정적','가끔 흔들림','자주 피함'], good:0},
+  {k:'habit',  name:'습관어',    opts:['거의 없음','가끔','잦음'], good:0},
+  {k:'length', name:'답변 길이', opts:['짧음','적절','김'], good:1},
+];
+const JOBS = ['AI 에이전트 개발','AI 서비스 기획(PM)','백엔드 개발','프론트엔드 개발','데이터·ML 엔지니어링','AI 솔루션·컨설팅'];
+const SECTIONS = [
+  {k:'intro', name:'자기소개 및 지원동기', min:3, lead:'hr', focus:'의사소통, 지원 의지, 강점 전달',
+   q:['1분 내외로 본인에 대해 소개해 주세요.','AI 에이전트 기반 서비스 개발 과정을 선택한 이유는 무엇인가요?','AI·소프트웨어 개발 직무 중 현재 가장 관심 있는 분야는 무엇이고, 그 이유는 무엇인가요?'],
+   tip:'“AI가 유망해서” 같은 일반적 답변에 그치지 않고 본인의 경험·문제의식과 연결하는지 확인합니다.'},
+  {k:'case', name:'Case 면접', min:6, lead:'tech', focus:'문제 정의, 논리적 사고, 실행 가능성, 위험 인식', q:[], tip:'상황 제시 1분 → 답변 3분 → 후속 질문 2분'},
+  {k:'ai', name:'AI 직무 관심·학습 경험', min:5, lead:'tech', focus:'직무 이해, 학습 의지, 기술적 호기심, 실제 기여',
+   q:['AI 분야에서 최근 관심 있게 본 기술이나 서비스가 있나요? → 직접 활용해 본 경험은?','교육 중 프로젝트에서 맡은 역할은? → 본인이 직접 구현하거나 결정한 부분은?','가장 어려웠던 문제와 해결 방법은? → 원인을 어떻게 찾았고, 해결 여부는 어떻게 확인했나요?','생성형 AI·AI 에이전트 활용 시 주의할 점은? → 부정확한 답변을 어떻게 검증하겠습니까?']},
+  {k:'cover', name:'자기소개서 기반 질문', min:4, lead:'hr', focus:'주도성, 책임감, 협업, 경험의 진정성',
+   q:['가장 의미 있었던 경험 → 본인이 직접 한 일은?','팀 활동 중 어려움을 겪었던 경험 → 의견 차이를 어떻게 해결했나요?','실패하거나 계획대로 되지 않았던 경험 → 무엇을 배웠고 이후 어떻게 달라졌나요?','본인의 강점 → 그 강점을 보여주는 구체적 사례는?'],
+   tip:'상황 → 본인의 행동 → 결과 → 배운 점 순서로 질문합니다.'},
+  {k:'close', name:'마무리', min:2, lead:'hr', focus:'핵심 전달력, 태도, 강점 정리', q:['마지막으로 하고 싶은 말이나 질문이 있나요?']},
+];
+
+/* ───────── 상태 ───────── */
+const S = {
+  view:'input', db:null, demo:false, ready:false,
+  students:{}, evals:{}, finals:{},
+  campus:'all', search:'', sel:null, role:'hr',
+  draft:null, dirty:false, saving:false, saveMsg:'', saveErr:false,
+  resultSel:null, finalDraft:null, finalDirty:false, finalTop:null,
+  timer:{start:null, elapsed:0, run:false},
+  rosterConfirm:null, casePool:null,
+};
+const LS = {get(k,d){try{const v=localStorage.getItem('kmi:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+            set(k,v){try{localStorage.setItem('kmi:'+k,JSON.stringify(v))}catch(e){}}};
+S.role = LS.get('role','hr'); S.campus = LS.get('campus','all');
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast = m => {const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2200)};
+const fmt = (n,d=1) => n==null||isNaN(n)?'–':(Math.round(n*10**d)/10**d).toFixed(d);
+
+/* ───────── 점수 계산 ───────── */
+function conv(scores, items){ // 1~5점 × 배점 ÷ 5
+  let sum=0, filled=0;
+  for(const it of items){const v=scores?.[it.k]; if(v){sum+=v*it.w/5; filled++;}}
+  return {total:sum, filled, complete:filled===items.length};
+}
+function isScored(e){return !!e && (Object.keys(e.scores||{}).length>0 || Object.keys(e.caseScores||{}).length>0 || !!e.strengths || !!e.improve)}
+function EV(sid,r){const e=S.evals[sid+'__'+r]; return isScored(e)?e:null}
+function evalsOf(sid){return ['hr','tech'].map(r=>EV(sid,r)).filter(Boolean)}
+function aggregate(sid){
+  const ev = evalsOf(sid);
+  const avg = (items, field) => { const o={}; for(const it of items){const vs=ev.map(e=>e[field]?.[it.k]).filter(Boolean); o[it.k]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;} return o;};
+  const common = avg(COMMON,'scores');
+  // 케이스: 실무 면접관 선택을 우선, 같은 케이스로 채점한 평가끼리만 평균
+  const te=ev.find(e=>e.role==='tech'), caseDef = caseOf(S.students[sid]?.caseId || (te||ev[0])?.caseId);
+  const evc = ev.filter(e=>(e.caseId||'sec')===caseDef.id);
+  const cs={}; for(const it of caseDef.items){const vs=evc.map(e=>e.caseScores?.[it.k]).filter(Boolean); cs[it.k]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
+  const caseDiff = ev.some(e=>Object.keys(e.caseScores||{}).length && (e.caseId||'sec')!==caseDef.id);
+  const sum = (items, o) => { let s=0, n=0; for(const it of items){ if(o[it.k]!=null){s+=o[it.k]*it.w/5;n++;} } return n?{total:s, complete:n===items.length}:{total:null,complete:false}; };
+  // 면접관 간 2점 이상 차이 항목
+  const gaps = COMMON.filter(it=>{const vs=ev.map(e=>e.scores?.[it.k]).filter(Boolean); return vs.length===2 && Math.abs(vs[0]-vs[1])>=2;}).map(it=>it.k);
+  // 우선 개선 과제: 두 면접관의 1순위부터 번갈아 모아 최대 3개
+  const lists = ev.map(e=>(e.top3||[]).map(x=>(x||'').trim()).filter(Boolean)), top3=[];
+  for(let i=0;i<3;i++) for(const l of lists) if(l[i] && !top3.includes(l[i])) top3.push(l[i]);
+  return {ev, common, cs, commonTotal:sum(COMMON,common), caseTotal:sum(caseDef.items,cs), caseDef, caseDiff, gaps, top3:top3.slice(0,3)};
+}
+function sortedStudents(){
+  return Object.entries(S.students).map(([id,s])=>({id,...s}))
+    .filter(s=>S.campus==='all'||s.campus===S.campus)
+    .sort((a,b)=>(a.campus||'').localeCompare(b.campus||'')||(a.slot||'99').localeCompare(b.slot||'99')||(a.room||'').localeCompare(b.room||'')||(a.team||'').localeCompare(b.team||'','ko')||(a.name||'').localeCompare(b.name||'','ko'));
+}
+function blankDraft(){return {interviewer:LS.get('iv:'+S.role,''), scores:{}, caseScores:{}, notes:{}, strengths:'', improve:'', oneLine:'',
+  nv:{}, habitWords:'', top3:['','',''], prepQs:'', jobs:[], jobNote:'', followups:''}}
+function loadDraft(){
+  if(!S.sel){S.draft=null;return}
+  const key=S.sel+'__'+S.role, saved=S.evals[key];
+  const local=LS.get('draft:'+key,null);
+  if(local && (!saved || (local._ts||0) > (saved.updatedAt||0))){S.draft=local; S.dirty=true; S.saveMsg='저장되지 않은 임시 입력을 불러왔습니다';}
+  else {S.draft = saved ? JSON.parse(JSON.stringify(saved)) : blankDraft(); S.dirty=false; S.saveMsg = saved?`저장됨 · ${new Date(saved.updatedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`:'아직 입력 전';}
+  S.draft.scores ||= {}; S.draft.caseScores ||= {}; S.draft.notes ||= {};
+  { const oe=S.evals[S.sel+'__'+(S.role==='hr'?'tech':'hr')]; S.draft.caseId = S.students[S.sel]?.caseId || S.draft.caseId || oe?.caseId || 'sec'; }
+  S.draft.nv ||= {}; S.draft.jobs ||= []; S.draft.top3 = [0,1,2].map(i=>(S.draft.top3||[])[i]||'');
+  S.saveErr=false;
+}
+function markDirty(){S.dirty=true; S.saveErr=false; S.saveMsg='저장하지 않은 변경이 있습니다'; const k=S.sel+'__'+S.role; LS.set('draft:'+k,{...S.draft,_ts:Date.now()}); renderSavebar();}
+
+/* ───────── 렌더 ───────── */
+function render(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===S.view));
+  const m=$('#main');
+  const banner = S.demo?`<div class="banner"><b>예시 화면</b> — Firebase 설정 전이라 예시 교육생 3명으로 보여 드립니다. 입력한 내용은 저장되지 않습니다. (설정 방법은 README 참고)</div>`:'';
+  if(S.view==='input') m.innerHTML = banner+viewInput();
+  else if(S.view==='summary') m.innerHTML = banner+viewSummary();
+  else if(S.view==='result') m.innerHTML = banner+viewResult();
+  else m.innerHTML = banner+viewRoster();
+  $('#savebar').hidden = !(S.view==='input' && S.sel && S.draft);
+  renderSavebar();
+}
+function campusSeg(){
+  return `<div class="seg" role="group" aria-label="캠퍼스">${[['all','전체'],['홍대','서울 홍대'],['천안','천안']].map(([v,l])=>`<button data-act="campus" data-v="${v}" aria-pressed="${S.campus===v}">${l}</button>`).join('')}</div>`;
+}
+function emptyRoster(){
+  return `<div class="card empty"><p><b>등록된 교육생이 없습니다.</b></p><p>‘교육생 명단’ 탭에서 이름과 면접 시간을 붙여넣어 등록하면 면접관 모두에게 같은 명단이 보입니다.</p><button class="btn primary" data-act="go" data-v="roster">명단 등록하기</button></div>`;
+}
+
+function viewInput(){
+  const list = sortedStudents().filter(s=>!S.search||s.name?.includes(S.search));
+  if(!Object.keys(S.students).length) return S.ready?emptyRoster():`<div class="card empty">명단을 불러오는 중…</div>`;
+  const items = list.map(s=>`<li><button data-act="sel" data-v="${s.id}" aria-current="${S.sel===s.id}">
+     <span class="slot">${esc(s.slot||(s.team||'').replace('회차 ','-').replace('조',''))}</span><span class="nm">${esc(s.name)}</span>
+     <span class="dots">${['hr','tech'].map(r=>`<span class="dot ${EV(s.id,r)?'on':S.evals[s.id+'__'+r]?'prep':''}" title="${ROLES[r].name} ${EV(s.id,r)?'평가 입력 완료':S.evals[s.id+'__'+r]?'사전 질문만 작성':'미입력'}">${ROLES[r].tag}</span>`).join('')}</span></button></li>`).join('');
+  const roster = `<aside class="roster"><div class="roster-head">${campusSeg()}<input type="text" id="q" placeholder="이름 검색" value="${esc(S.search)}" aria-label="이름 검색"></div>
+    <ul>${items||'<li class="empty">해당 교육생이 없습니다</li>'}</ul></aside>`;
+  return `<div class="split">${roster}<section class="sheet">${S.sel&&S.students[S.sel]?evalForm():`<div class="card empty">왼쪽 목록에서 면접할 교육생을 선택하세요.<br><small>H = 인사 면접관, T = 실무 면접관 · 초록은 평가 입력 완료, 파랑은 사전 질문만 작성</small></div>`}</section></div>`;
+}
+
+function rubricRows(items, field){
+  const d=S.draft;
+  return items.map(it=>{const v=d[field][it.k]; return `<div class="rrow">
+    <div class="lbl"><b>${esc(it.name)}<span class="w">${it.w}점</span>${it.role===S.role?'<span class="mine">중점</span>':''}</b><small>${esc(it.desc)}</small></div>
+    <div class="pick" role="group" aria-label="${esc(it.name)}">${[1,2,3,4,5].map(n=>`<button data-act="score" data-f="${field}" data-k="${it.k}" data-v="${n}" aria-pressed="${v===n}" title="${n}점 · ${SCALE[n]} — ${SCALE_DESC[n]}">${n}</button>`).join('')}</div>
+    <div class="pts">${v?fmt(v*it.w/5,0):'–'}<small>/${it.w}</small></div></div>`}).join('');
+}
+
+function evalForm(){
+  const s=S.students[S.sel], d=S.draft, other=S.role==='hr'?'tech':'hr', oe=S.evals[S.sel+'__'+other];
+  const cdef=caseOf(d.caseId), ct=conv(d.scores,COMMON), cc=conv(d.caseScores,cdef.items);
+  const sec = SECTIONS.map(x=>{
+    let body='';
+    if(x.k==='case'){ const assigned=s.caseId;
+      const picker=`<div class="casepick" role="group" aria-label="케이스 선택">${CASES.map(c=>`<button data-act="case" data-v="${c.id}" aria-pressed="${d.caseId===c.id}"><span class="cno">${c.no}</span><span><b>${esc(c.type)}</b><small>${esc(c.title)}</small></span></button>`).join('')}</div>`;
+      body = assigned
+        ? `<div class="assigned"><span class="pill acc">배정 케이스</span><b>케이스 ${esc(cdef.no)} · ${esc(cdef.type)}</b><details class="chg"><summary>케이스 변경</summary><p class="chg-note">바꾸면 이 교육생의 배정 케이스가 바뀌고, 상대 면접관 화면에도 반영됩니다.</p>${picker}</details></div>`
+        : `<p class="gap" style="margin:8px 0 0;font-size:12px">명단에서 케이스가 배정되지 않았습니다. 아래에서 고르면 이 교육생에게 배정됩니다.</p>${picker}`;
+      body += `
+      <div class="casebox"><div class="case-head"><b>${esc(cdef.title)}</b><button class="btn" data-act="present">케이스 화면 띄우기</button></div>
+      <p class="ctime">${esc(cdef.time)}</p>
+      <p class="ctip">당일 배부한 케이스입니다. 짧은 시간 안에 문제를 어떻게 구조화하는지, 후속 질문에서 본인 생각으로 확장하는지를 확인하세요.</p>
+      ${cdef.situation.map(p=>`<p>${esc(p)}</p>`).join('')}
+      <ol>${cdef.qs.map(q=>`<li>${cdef.qs.length>1?`<b>${esc(q[0])}</b> · `:''}${esc(q[1])}</li>`).join('')}</ol>
+      <details class="cfollow"><summary>후속 질문 예시</summary><ul>${cdef.follow.map(q=>`<li>${esc(q)}</li>`).join('')}</ul></details></div>
+      <div class="rubric">${rubricRows(cdef.items,'caseScores')}</div>
+      <div class="subtotal"><span>Case 점수</span><span class="num">${cc.filled?fmt(cc.total,0):'–'} <small style="font-size:13px;color:var(--faint)">/ 100</small></span></div>`;}
+    else if(x.q.length) body = `<details ${x.lead===S.role?'open':''}><summary>질문 가이드</summary><div class="guide"><ul>${x.q.map(q=>`<li>${esc(q)}</li>`).join('')}</ul>${x.tip?`<p class="tip">${esc(x.tip)}</p>`:''}</div></details>${x.k==='cover'?`<div class="preplist" id="preplist">${prepList()}</div>`:''}`;
+    return `<div class="card sec"><h3>${esc(x.name)}<span class="t">${x.min}분</span><span class="focus">${esc(x.focus)} · 주도: ${ROLES[x.lead].short}</span></h3>${body}
+      <label class="f" style="margin-top:10px">관찰 메모<textarea id="note-${x.k}" data-note="${x.k}" placeholder="답변 요지, 인상적인 표현, 아쉬운 점을 적어 두세요">${esc(d.notes[x.k]||'')}</textarea></label></div>`;}).join('');
+  const t=S.timer, el=curElapsed();
+  return `<div class="card">
+    <div class="who"><div class="person"><h2>${esc(s.name)}</h2><p>${esc(s.campus==='홍대'?'서울 홍대':s.campus||'')}${s.slot?' · '+esc(s.slot):''}${s.room?' · '+esc(s.room):''}${s.team?' · '+esc(s.team):''}${s.panel?' · 면접관 '+esc(s.panel):''}${s.project?`<br><span class="proj">캡스톤 과제 · ${esc(s.project)}</span>`:''}${isScored(oe)?` · <span class="pill good">${ROLES[other].short} 입력 완료 (${esc(oe.interviewer||'')})</span>`:''}</p></div>
+      <div class="ctl"><div class="seg" role="group" aria-label="면접관 역할">${['hr','tech'].map(r=>`<button data-act="role" data-v="${r}" aria-pressed="${S.role===r}">${ROLES[r].name}</button>`).join('')}</div>
+      <label class="f">면접관 이름<input type="text" id="iv" value="${esc(d.interviewer)}" placeholder="예: 김OO"></label></div></div>
+    <div class="timer"><span class="clock" id="clock">${clockStr(el)}</span>
+      <div class="track" id="track"><div class="fill" style="width:${Math.min(100,el/12000)}%"></div>${trackSpans(el)}</div>
+      <button class="btn" data-act="timer">${t.run?'일시정지':(el?'계속':'20분 시작')}</button><button class="btn ghost" data-act="treset">초기화</button></div>
+  </div>
+  <div class="card prep"><h3 style="margin:0">면접 전 준비 · 자소서 확인 질문<small class="hint">교육생에게는 전달되지 않습니다</small></h3>${wg('작성 가이드',`<ul><li>면접 전에 자소서를 읽고 <b>꼭 확인하고 싶은 것 3~4개</b>를 중요한 순서로 적습니다. 자소서 질문 시간은 4분입니다.</li><li>“주도적으로”, “적극적으로”, “성공적으로”처럼 <b>근거 없이 쓴 표현</b>을 찾아, 실제 행동을 묻는 질문으로 바꿉니다.</li><li>팀 성과나 수치가 나오면 <b>본인이 직접 한 부분</b>을 묻습니다.</li><li>문장을 다시 읽게 하는 질문보다 <b>상황 → 행동 → 결과 → 배운 점</b>이 나오도록 묻습니다.</li><li>상대 면접관이 적은 질문이 아래에 보이니, 겹치지 않게 나눠 주세요.</li></ul><div class="ex"><span class="x">아쉬운 예</span>팀 프로젝트를 주도했다고 쓰셨는데, 설명해 주세요.</div><div class="ex"><span class="o">좋은 예</span>“팀 프로젝트를 주도적으로 이끌었다”고 하셨는데, 계획대로 안 되던 순간에 본인이 직접 내린 결정은 무엇이었고 결과는 어땠나요?</div>`)}
+    <textarea id="prepQs" data-fb="prepQs" style="min-height:110px" placeholder="한 줄에 하나씩 적어 주세요&#10;예: 챗봇 프로젝트에서 ‘응답 정확도 30% 개선’ — 본인이 직접 바꾼 것은 무엇인지&#10;예: 비전공에서 개발로 전환한 계기와 혼자 학습한 방법">${esc(d.prepQs)}</textarea>
+    ${oe?.prepQs?.trim()?`<div class="other-prep"><b>${ROLES[other].name}${oe.interviewer?' ('+esc(oe.interviewer)+')':''}이 준비한 질문</b><ol>${oe.prepQs.split('\n').map(x=>x.trim()).filter(Boolean).map(q=>`<li>${esc(q)}</li>`).join('')}</ol></div>`:''}</div>
+  ${sec}
+  <div class="card"><h3 style="margin:0">공통 평가표 <small style="color:var(--muted);font-weight:500;font-size:12px">· 1~5점 × 배점 ÷ 5</small></h3>
+    <div class="scale-legend">${[1,2,3,4,5].map(n=>`<span><b>${n}</b> ${SCALE[n]}</span>`).join('')}</div>
+    <div class="rubric">${rubricRows(COMMON,'scores')}</div>
+    <div class="subtotal"><span>환산 점수</span><span class="num">${ct.filled?fmt(ct.total,0):'–'} <small style="font-size:13px;color:var(--faint)">/ 100</small></span></div></div>
+  <div class="card"><h3 style="margin:0">말투·태도 체크<small class="hint">클릭으로 선택, 다시 누르면 해제</small></h3>${wg('관찰 기준',`<ul><li><b>말 속도</b> · 1분 자기소개가 40초 안에 끝나거나 1분 30초를 넘기면 체크합니다.</li><li><b>시선</b> · 생각할 때 잠깐 피하는 것은 괜찮습니다. 답변 내내 아래나 허공을 보는지 봅니다.</li><li><b>습관어</b> · 한 답변에 같은 말이 3번 이상 나오면 ‘잦음’입니다. 실제로 들은 단어를 적어 주면 교육생이 바로 고칠 수 있습니다.</li><li><b>답변 길이</b> · 일반 질문 기준 30초~1분이 적절합니다. 결론 없이 길어지면 ‘김’, 근거 없이 한두 문장이면 ‘짧음’입니다.</li></ul>`)}
+    <div class="nv">${NONVERBAL.map(n=>`<div class="nvrow"><b>${n.name}</b><div class="chips" role="group" aria-label="${n.name}">${n.opts.map((o,i)=>`<button data-act="nv" data-k="${n.k}" data-v="${esc(o)}" class="${i===n.good?'good':'bad'}" aria-pressed="${d.nv[n.k]===o}">${esc(o)}</button>`).join('')}</div></div>`).join('')}</div>
+    <label class="f" style="margin-top:10px">자주 쓴 습관어<input type="text" id="habitWords" data-fb="habitWords" value="${esc(d.habitWords)}" placeholder="예: 음, 약간, 그냥, 사실"></label></div>
+  <div class="card"><h3 style="margin:0 0 10px">교육생에게 전달할 피드백</h3>${wg('작성 가이드 · 좋은 피드백 예시',`<p>교육생은 <b>어느 답변에서, 무엇이, 어떻게</b> 좋았거나 아쉬웠는지를 가장 원합니다. 장면 → 관찰 → 제안 순서로 적어 주세요.</p><div class="ex"><span class="x">아쉬운 예</span>자신감을 더 가지세요. 논리력이 조금 부족합니다.</div><div class="ex"><span class="o">좋은 예</span>Case 2번에서 해결책부터 말하고 근거를 뒤에 붙여 흐름이 끊겼습니다. ‘결론 → 근거 2개 → 실행 순서’로 말하면 훨씬 설득력 있습니다.</div><p><b>Top 3</b>는 다음 면접 전까지 혼자 연습할 수 있는 행동으로 적습니다. “~하기” 형태가 좋습니다. 두 면접관의 1순위가 결과지 맨 위에 먼저 올라갑니다.</p>`)}
+    <div class="grid2"><label class="f">강점 (구체적 장면과 함께)<textarea id="strengths" data-fb="strengths" placeholder="예: Case 답변에서 위험을 ‘직접 노출·간접 추론·캐시 재사용’으로 나눠 구조화한 점이 돋보였습니다.">${esc(d.strengths)}</textarea></label>
+    <label class="f">개선 과제 (다음에 해볼 행동)<textarea id="improve" data-fb="improve" placeholder="예: 프로젝트 경험을 설명할 때 본인이 직접 결정한 부분과 결과 수치를 함께 말해 보세요.">${esc(d.improve)}</textarea></label></div>
+    <div style="margin-top:14px"><span class="flbl">우선 개선 과제 Top 3 <small>· 다음 면접까지 할 일을 중요한 순서대로</small></span>
+      ${[0,1,2].map(i=>`<div class="topin"><span class="no">${i+1}</span><input type="text" id="top-${i}" data-top="${i}" value="${esc(d.top3[i])}" placeholder="${['예: 프로젝트 답변은 본인이 결정한 것부터 말하기','예: Case 답변을 위험 → 원인 → 대책 순서로 구조화하기','예: 지원 동기를 본인 경험 한 가지와 연결하기'][i]}" aria-label="우선 개선 과제 ${i+1}"></div>`).join('')}</div>
+    <label class="f" style="margin-top:12px">한 줄 총평<input type="text" id="oneLine" data-fb="oneLine" value="${esc(d.oneLine)}" placeholder="예: 논리는 탄탄하나 본인 기여를 더 선명하게"></label></div>
+  <div class="card"><h3 style="margin:0 0 10px">진로 · 다음 면접 준비</h3>${wg('작성 가이드',`<p><b>추천 직무</b>는 답변에서 드러난 강점 기준으로 고르고, 이유를 한 줄로 적어 주세요.</p><p><b>꼬리질문</b>은 시간이 없어 못 물었지만 실제 면접이라면 반드시 나올 질문입니다. 경험의 빈틈을 짚는 질문일수록 도움이 됩니다.</p>`)}
+    <span class="flbl">추천 직무 <small>· 복수 선택</small></span>
+    <div class="chips" role="group" aria-label="추천 직무">${JOBS.map(j=>`<button data-act="job" data-v="${esc(j)}" aria-pressed="${d.jobs.includes(j)}">${esc(j)}</button>`).join('')}</div>
+    <label class="f" style="margin-top:10px">추천 이유<input type="text" id="jobNote" data-fb="jobNote" value="${esc(d.jobNote)}" placeholder="예: 문제를 구조화하는 힘이 좋아 서비스 기획과 에이전트 설계에 잘 맞음"></label>
+    <label class="f" style="margin-top:10px">예상 꼬리질문 · 실제 면접이라면 더 물었을 것 <small style="font-weight:500">(한 줄에 하나)</small><textarea id="followups" data-fb="followups" placeholder="예: 권한 메타데이터가 없는 문서는 어떻게 처리하겠습니까?&#10;예: 팀원과 의견이 갈렸을 때 최종 결정은 누가 했나요?">${esc(d.followups)}</textarea></label></div>`;
+}
+function wg(t,body){return `<details class="wguide"><summary>${t}</summary><div class="wg">${body}</div></details>`}
+function prepList(){
+  const own=(S.draft?.prepQs||'').split('\n').map(x=>x.trim()).filter(Boolean).map(q=>({r:S.role,q}));
+  const other=S.role==='hr'?'tech':'hr', oe=S.evals[S.sel+'__'+other];
+  const theirs=(oe?.prepQs||'').split('\n').map(x=>x.trim()).filter(Boolean).map(q=>({r:other,q}));
+  const all=[...own,...theirs];
+  if(!all.length) return '<span class="pl-empty">맨 위 ‘면접 전 준비’에 자소서 확인 질문을 적어 두면 여기에 보입니다.</span>';
+  return `<b>미리 준비한 자소서 질문</b><ol>${all.map(x=>`<li><span class="pl-tag">${ROLES[x.r].short}</span>${esc(x.q)}</li>`).join('')}</ol>`;
+}
+function present(c){
+  const el=$('#present');
+  el.innerHTML=`<div class="pv"><div class="pv-top"><span>케이스 면접 · ${esc(c.type)}</span><button class="btn" data-act="closePresent">닫기</button></div>
+    <h2>${esc(c.title)}</h2><p class="pv-time">${esc(c.time)}</p>
+    <div class="pv-sit"><b>상황</b>${c.situation.map(p=>`<p>${esc(p)}</p>`).join('')}</div>
+    <div class="pv-q"><b>${c.qs.length>1?'질문 — 순서대로 답해 주세요':'질문'}</b><ol>${c.qs.map(q=>`<li>${c.qs.length>1?`<strong>${esc(q[0])}</strong><br>`:''}${esc(q[1])}</li>`).join('')}</ol></div></div>`;
+  el.hidden=false; el.querySelector('button').focus();
+}
+function renderSavebar(){
+  const b=$('#savebar'); if(b.hidden||!S.draft) return;
+  const ct=conv(S.draft.scores,COMMON), citems=caseOf(S.draft.caseId).items, cc=conv(S.draft.caseScores,citems);
+  b.innerHTML = `<div class="wrap"><div class="score"><span>공통<b>${ct.filled?fmt(ct.total,0):'–'}</b></span><span>Case<b>${cc.filled?fmt(cc.total,0):'–'}</b></span><span>항목 ${ct.filled}/6 · ${cc.filled}/${citems.length}</span></div>
+   <div class="st ${S.saveErr?'err':S.dirty?'dirty':''}">${esc(S.saveMsg)}</div>
+   <button class="btn primary" data-act="save" ${S.saving?'disabled':''}>${S.saving?'저장 중…':`${ROLES[S.role].short} 평가 저장`}</button></div>`;
+}
+/* 타이머 */
+function curElapsed(){const t=S.timer; return t.elapsed + (t.run?Date.now()-t.start:0)}
+function clockStr(ms){const s=Math.floor(ms/1000); return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+function trackSpans(ms){let acc=0; const m=ms/60000; return SECTIONS.map(x=>{const now=m>=acc&&m<acc+x.min; acc+=x.min; return `<span style="width:${x.min*5}%" class="${now?'now':''}" title="${esc(x.name)} ${x.min}분">${x.min>=4?esc(x.name.split(' ')[0]):x.min+'′'}</span>`}).join('')}
+setInterval(()=>{ if(!S.timer.run||S.view!=='input') return; const el=curElapsed(); const c=$('#clock'); if(c){c.textContent=clockStr(el); c.style.color=el>=1200000?'var(--bad)':''} const tr=$('#track'); if(tr) tr.innerHTML=`<div class="fill" style="width:${Math.min(100,el/12000)}%"></div>${trackSpans(el)}`;},1000);
+
+function viewSummary(){
+  const list=sortedStudents();
+  if(!Object.keys(S.students).length) return S.ready?emptyRoster():'';
+  const rows=list.map(s=>{const a=aggregate(s.id), f=S.finals[s.id]||{}, hr=EV(s.id,'hr'), te=EV(s.id,'tech');
+    const st = f.delivered?'<span class="pill good">전달 완료</span>':(hr&&te?'<span class="pill acc">전달 대기</span>':(hr||te?'<span class="pill warn">입력 중</span>':'<span class="pill">면접 전</span>'));
+    return `<tr class="click" tabindex="0" data-act="openResult" data-v="${s.id}"><td>${esc(s.campus)}</td><td class="num">${esc(s.slot||'')}</td><td><b>${esc(s.name)}</b></td>
+      <td>${hr?esc(hr.interviewer||'✓'):'<span style="color:var(--faint)">–</span>'}</td><td>${te?esc(te.interviewer||'✓'):'<span style="color:var(--faint)">–</span>'}</td>
+      ${COMMON.map(it=>`<td class="n ${a.gaps.includes(it.k)?'gap':''}" ${a.gaps.includes(it.k)?'title="면접관 간 2점 이상 차이"':''}>${fmt(a.common[it.k])}</td>`).join('')}
+      <td class="n"><b>${fmt(a.commonTotal.total)}</b></td><td class="n">${fmt(a.caseTotal.total)}${a.caseTotal.total!=null?` <small class="ctag">${esc(a.caseDef.short)}</small>`:''}</td><td>${st}</td></tr>`}).join('');
+  const all=list.map(s=>({s,a:aggregate(s.id),f:S.finals[s.id]}));
+  const both=all.filter(x=>x.a.ev.length===2), done=all.filter(x=>x.f?.delivered);
+  const avgT = both.length?both.reduce((p,x)=>p+(x.a.commonTotal.total||0),0)/both.length:null;
+  const itemAvg = COMMON.map(it=>{const vs=all.map(x=>x.a.common[it.k]).filter(v=>v!=null); return {it, v:vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null}}).filter(x=>x.v!=null).sort((a,b)=>a.v-b.v);
+  return `<div class="stats">
+    <div class="stat"><small>대상 교육생</small><b>${list.length}<em>명</em></b></div>
+    <div class="stat"><small>두 면접관 입력 완료</small><b>${both.length}<em> / ${list.length}</em></b></div>
+    <div class="stat"><small>결과지 전달 완료</small><b>${done.length}<em> / ${list.length}</em></b></div>
+    <div class="stat"><small>평균 환산 점수</small><b>${fmt(avgT)}<em> / 100</em></b></div>
+    <div class="stat"><small>가장 보완이 필요한 항목</small><b style="font-size:15px;font-family:var(--f-body)">${itemAvg[0]?esc(itemAvg[0].it.name):'–'}</b>${itemAvg[0]?`<small class="num">평균 ${fmt(itemAvg[0].v,2)} / 5</small>`:''}</div></div>
+  <div class="toolbar">${campusSeg()}<span class="grow"></span><small style="color:var(--muted)">항목 점수는 두 면접관 평균(1~5). <span class="gap">주황색</span>은 2점 이상 차이 — 보정 논의 권장</small><button class="btn" data-act="csv">CSV로 저장</button></div>
+  <div class="tablebox"><table><thead><tr><th>캠퍼스</th><th>시간</th><th>이름</th><th>인사</th><th>실무</th>${COMMON.map(it=>`<th class="n" title="${esc(it.name)}">${esc(it.name.split(' ')[0].replace('AI·개발','AI·개발'))}<br><span style="font-weight:500">${it.w}</span></th>`).join('')}<th class="n">환산</th><th class="n">Case</th><th>상태</th></tr></thead><tbody>${rows||'<tr><td colspan="14" class="empty">해당 캠퍼스 교육생이 없습니다</td></tr>'}</tbody></table></div>`;
+}
+
+function finalDefault(sid){
+  const ev=evalsOf(sid); const lines=ev.map(e=>e.oneLine).filter(Boolean);
+  return lines.join(' / ');
+}
+function viewResult(){
+  const list=sortedStudents();
+  if(!Object.keys(S.students).length) return S.ready?emptyRoster():'';
+  if(!S.resultSel||!S.students[S.resultSel]) S.resultSel=list[0]?.id;
+  const sid=S.resultSel; if(!sid) return `<div class="toolbar">${campusSeg()}</div><div class="card empty">해당 캠퍼스 교육생이 없습니다</div>`;
+  const s=S.students[sid], a=aggregate(sid), f=S.finals[sid]||{};
+  if(S.finalDraft==null){
+    S.finalDraft = f.comment ?? finalDefault(sid);
+    S.finalTop = [0,1,2].map(i=>((f.top3&&f.top3.some(Boolean))?f.top3:a.top3)[i]||'');
+  }
+  const sel = `<select id="rsel" aria-label="교육생 선택">${list.map(x=>`<option value="${x.id}" ${x.id===sid?'selected':''}>${esc(x.campus)} · ${esc(x.slot||'')} ${esc(x.name)}${S.finals[x.id]?.delivered?' ✓':''}</option>`).join('')}</select>`;
+  const idx=list.findIndex(x=>x.id===sid);
+  return `<div class="toolbar">${campusSeg()}<div style="flex:1 1 240px;min-width:0">${sel}</div>
+     <button class="btn" data-act="rnav" data-v="-1" ${idx<=0?'disabled':''}>이전</button><button class="btn" data-act="rnav" data-v="1" ${idx>=list.length-1?'disabled':''}>다음</button></div>
+  <div class="result-layout">${sheetHTML(sid)}
+    <div class="side-panel">
+      <div class="card"><h3>결과지 내용 확정</h3>
+        <span class="flbl">우선 개선 과제 Top 3</span>
+        ${[0,1,2].map(i=>`<div class="topin"><span class="no">${i+1}</span><input type="text" id="ftop-${i}" data-ftop="${i}" value="${esc(S.finalTop[i])}" aria-label="우선 개선 과제 ${i+1}"></div>`).join('')}
+        <span class="flbl" style="margin-top:14px">종합 의견</span>
+        <textarea id="finalText" style="min-height:130px" placeholder="두 면접관의 의견을 종합해 교육생에게 전할 메시지를 적어 주세요">${esc(S.finalDraft)}</textarea>
+        <div class="row" style="margin-top:8px"><button class="btn primary" data-act="saveFinal">${S.finalDirty?'결과지 내용 저장':'저장됨'}</button>
+        ${!f.updatedAt&&a.ev.length?'<small style="color:var(--muted)">면접관 입력으로 미리 채웠습니다</small>':''}</div></div>
+      <div class="card"><h3>교육생에게 전달</h3>
+        <p style="margin-bottom:10px">결과지를 파일로 저장해 메일·메신저로 보내거나, 텍스트를 복사해 붙여넣으세요.</p>
+        <div class="row"><button class="btn" data-act="dl">결과지 파일 저장</button><button class="btn" data-act="copy">텍스트 복사</button></div>
+        <div class="row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+          ${f.delivered?`<span class="pill good">전달 완료 · ${new Date(f.deliveredAt).toLocaleDateString('ko-KR')}</span><button class="btn ghost" data-act="deliver" data-v="0">취소</button>`:`<button class="btn" data-act="deliver" data-v="1" ${a.ev.length?'':'disabled'}>전달 완료로 표시</button>`}</div></div>
+      ${a.caseDiff?`<div class="card" style="border-color:var(--warn)"><h3 style="color:var(--warn)">케이스 불일치</h3><p>배정된 케이스와 다른 케이스로 채점된 평가가 있습니다. 결과지에는 「${esc(a.caseDef.type)}」 기준 점수만 반영됩니다. 해당 면접관에게 다시 채점을 요청하세요.</p></div>`:''}
+      ${a.gaps.length?`<div class="card" style="border-color:var(--warn)"><h3 style="color:var(--warn)">점수 보정 확인</h3><p>${a.gaps.map(k=>esc(COMMON.find(c=>c.k===k).name)).join(', ')} 항목에서 두 면접관 점수가 2점 이상 차이 납니다. 전달 전에 근거를 맞춰 보세요.</p></div>`:''}
+    </div></div>`;
+}
+function sheetHTML(sid, forFile){
+  const s=S.students[sid], a=aggregate(sid), f=S.finals[sid]||{};
+  const comment = S.finalDraft ?? f.comment ?? finalDefault(sid);
+  const top = (S.finalTop || a.top3).filter(x=>x&&x.trim());
+  const hr=EV(sid,'hr'), te=EV(sid,'tech');
+  const bars=(items,o,field)=>items.map(it=>{const v=o[it.k]; const per=a.ev.map(e=>e[field]?.[it.k]).filter(Boolean);
+    return `<div class="bar"><span>${esc(it.name)}</span><span class="tr"><i class="${v!=null&&v<3?'low':''}" style="width:${v?v/5*100:0}%"></i></span><span class="v">${v!=null?fmt(v*it.w/5)+'<small>/'+it.w+'</small>':'–'}</span></div>`}).join('');
+  const fbList=(key)=>a.ev.filter(e=>e[key]).map(e=>`<p>${esc(e[key])}</p>`).join('')||'<p style="color:var(--faint)">아직 입력되지 않았습니다.</p>';
+  const ct=a.commonTotal.total, low=COMMON.filter(it=>a.common[it.k]!=null).sort((x,y)=>a.common[x.k]-a.common[y.k])[0], hi=COMMON.filter(it=>a.common[it.k]!=null).sort((x,y)=>a.common[y.k]-a.common[x.k])[0];
+  const chip=(n,v)=>`<span class="nvchip ${n.opts.indexOf(v)===n.good?'good':'bad'}">${esc(v)}</span>`;
+  const nvRows = NONVERBAL.map(n=>{const vals=a.ev.map(e=>({r:e.role,v:e.nv?.[n.k]})).filter(x=>x.v); if(!vals.length) return '';
+    const same=vals.every(x=>x.v===vals[0].v);
+    return `<div class="nvline"><span>${n.name}</span><span>${same?chip(n,vals[0].v):vals.map(x=>`<small>${ROLES[x.r]?.short||''}</small> ${chip(n,x.v)}`).join(' ')}</span></div>`}).join('');
+  const habits=[...new Set(a.ev.flatMap(e=>(e.habitWords||'').split(/[,，、\s]+/).filter(Boolean)))];
+  const jobs=[...new Set(a.ev.flatMap(e=>e.jobs||[]))], jnotes=a.ev.map(e=>e.jobNote).filter(Boolean);
+  const fups=[...new Set(a.ev.flatMap(e=>(e.followups||'').split('\n').map(x=>x.trim()).filter(Boolean)))];
+  return `<article class="paper" id="paper">
+    <div class="eyebrow">K-뉴딜 아카데미 · AI 에이전트 기반 서비스 개발 과정</div>
+    <h2>모의면접 피드백 결과지</h2>
+    <div class="meta"><span><b style="color:var(--fg)">${esc(s.name)}</b></span><span>${s.campus==='홍대'?'서울 홍대':esc(s.campus)}</span>${s.slot?`<span>면접 ${esc(s.slot)}</span>`:''}<span>면접관: ${[hr&&'인사 '+(hr.interviewer||''),te&&'실무 '+(te.interviewer||'')].filter(Boolean).map(esc).join(', ')||'–'}</span></div>
+    ${top.length?`<div class="top3" style="margin-top:18px"><small>다음 면접까지 우선 개선 과제</small><ol>${top.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`:''}
+    <div class="hero-score"><div class="big">${ct!=null?fmt(ct,0):'–'}<small> / 100</small></div>
+      <div class="side"><span>강점 영역 <b>${hi?esc(hi.name):'–'}</b></span><span>보완 영역 <b>${low&&low!==hi?esc(low.name):'–'}</b></span><span>Case 면접 <b class="num">${a.caseTotal.total!=null?fmt(a.caseTotal.total,0)+' / 100':'–'}</b></span></div></div>
+    <h4>역량별 평가 <span class="num">두 면접관 평균 · 1~5점 × 배점 ÷ 5</span></h4>
+    <div class="bars">${bars(COMMON,a.common,'scores')}</div>
+    <h4>Case 면접 · ${esc(a.caseDef.type)}<span class="num" style="font-family:var(--f-body)">${esc(a.caseDef.title)}</span></h4>
+    <div class="bars">${bars(a.caseDef.items,a.cs,'caseScores')}</div>
+    <h4>면접관 피드백</h4>
+    <div class="fb"><div class="strong"><h5>잘한 점</h5>${fbList('strengths')}</div><div class="grow"><h5>다음 면접을 위한 개선 과제</h5>${fbList('improve')}</div></div>
+    ${nvRows||habits.length?`<h4>말투·태도</h4><div class="nvgrid">${nvRows}</div>${habits.length?`<p class="habits">자주 쓴 습관어 · ${habits.map(h=>`<span>${esc(h)}</span>`).join('')}</p>`:''}`:''}
+    ${jobs.length||fups.length?`<h4>진로와 다음 면접 준비</h4><div class="fb">
+      ${jobs.length||jnotes.length?`<div><h5>추천 직무</h5><div class="jobchips">${jobs.map(j=>`<span>${esc(j)}</span>`).join('')}</div>${jnotes.map(n=>`<p>${esc(n)}</p>`).join('')}</div>`:''}
+      ${fups.length?`<div><h5>실제 면접에서 나올 수 있는 꼬리질문</h5><ol>${fups.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></div>`:''}</div>`:''}
+    ${comment?`<h4>종합 의견</h4><div class="final-text">${esc(comment)}</div>`:''}
+    <div class="foot">본 모의면접은 선발이 아닌 성장 지원을 목적으로 합니다. 점수보다 평가 근거와 개선 방향을 중심으로 활용해 주세요.</div>
+  </article>`;
+}
+function sheetText(sid){
+  const s=S.students[sid], a=aggregate(sid), f=S.finals[sid]||{}; const comment=S.finalDraft??f.comment??'';
+  const L=[`[K-뉴딜 아카데미 모의면접 피드백] ${s.name} (${s.campus==='홍대'?'서울 홍대':s.campus}${s.slot?' · '+s.slot:''})`,'',
+    `■ 환산 점수: ${a.commonTotal.total!=null?fmt(a.commonTotal.total,0):'–'} / 100   (Case 면접 「${a.caseDef.type}」 ${a.caseTotal.total!=null?fmt(a.caseTotal.total,0):'–'} / 100)`];
+  const top=(S.finalTop||a.top3).filter(x=>x&&x.trim());
+  if(top.length){L.push('','■ 다음 면접까지 우선 개선 과제'); top.forEach((x,i)=>L.push(`${i+1}. ${x}`));}
+  L.push('','■ 역량별 평가');
+  COMMON.forEach(it=>{const v=a.common[it.k]; L.push(`- ${it.name}: ${v!=null?fmt(v*it.w/5)+' / '+it.w:'–'}`)});
+  L.push('','■ 잘한 점'); a.ev.filter(e=>e.strengths).forEach(e=>L.push(e.strengths));
+  L.push('','■ 개선 과제'); a.ev.filter(e=>e.improve).forEach(e=>L.push(e.improve));
+  const nv=NONVERBAL.map(n=>{const vs=[...new Set(a.ev.map(e=>e.nv?.[n.k]).filter(Boolean))]; return vs.length?`${n.name} ${vs.join('/')}`:''}).filter(Boolean);
+  const habits=[...new Set(a.ev.flatMap(e=>(e.habitWords||'').split(/[,，、\s]+/).filter(Boolean)))];
+  if(nv.length||habits.length){L.push('','■ 말투·태도'); if(nv.length) L.push(nv.join(' · ')); if(habits.length) L.push('자주 쓴 습관어: '+habits.join(', '));}
+  const jobs=[...new Set(a.ev.flatMap(e=>e.jobs||[]))]; if(jobs.length){L.push('','■ 추천 직무: '+jobs.join(', ')); a.ev.filter(e=>e.jobNote).forEach(e=>L.push('- '+e.jobNote));}
+  const fups=[...new Set(a.ev.flatMap(e=>(e.followups||'').split('\n').map(x=>x.trim()).filter(Boolean)))]; if(fups.length){L.push('','■ 예상 꼬리질문'); fups.forEach(q=>L.push('- '+q));}
+  if(comment) L.push('','■ 종합 의견',comment);
+  L.push('','※ 본 모의면접은 선발이 아닌 성장 지원을 목적으로 합니다.');
+  return L.join('\n');
+}
+
+function viewRoster(){
+  const list=sortedStudents();
+  const counts={홍대:0,천안:0}; Object.values(S.students).forEach(s=>counts[s.campus]=(counts[s.campus]||0)+1);
+  const pool=S.casePool||CASES.map(c=>c.id);
+  const ccount=Object.fromEntries(CASES.map(c=>[c.id,list.filter(s=>s.caseId===c.id).length]));
+  const unassigned=list.filter(s=>!s.caseId).length;
+  return `<div class="grid2" style="align-items:start;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+   <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+   <div class="card"><h3 style="margin:0 0 4px">교육생 일괄 등록</h3>
+     <p style="margin:0 0 12px;color:var(--muted);font-size:13px">한 줄에 한 명씩 <b>이름, 면접 시간, 면접실, 케이스 번호(1~4)</b> 순으로 붙여넣으세요. 시간·면접실·케이스는 생략할 수 있습니다. 면접 Time Table 엑셀에서 열을 복사해도 됩니다(탭 구분 가능).</p>
+     <label class="f">캠퍼스<select id="bulkCampus"><option value="홍대">서울 홍대</option><option value="천안">천안</option></select></label>
+     <label class="f" style="margin-top:10px">명단<textarea id="bulk" style="min-height:150px" placeholder="홍길동, 09:00, A실, 2&#10;김민지, 09:20, A실, 3&#10;이서준, 09:40"></textarea></label>
+     <div class="row" style="margin-top:10px"><button class="btn primary" data-act="bulkAdd">등록</button><small id="bulkMsg" style="color:var(--muted)"></small></div>
+     <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
+       <span class="flbl">명단 파일 불러오기</span>
+       <p style="margin:0 0 8px;color:var(--muted);font-size:12.5px">운영 담당자가 받은 명단 파일(.json)을 고르면 교육생이 한 번에 등록됩니다. 이미 있는 교육생은 같은 내용으로 덮어씁니다.</p>
+       <input type="file" id="rosterFile" accept=".json,application/json"> <small id="importMsg" style="color:var(--muted)"></small></div></div>
+   <div class="card"><h3 style="margin:0 0 4px">케이스 배정</h3>
+     <p style="margin:0 0 12px;color:var(--muted);font-size:13px">${S.campus==='all'?'전체':S.campus==='홍대'?'서울 홍대':'천안'} 교육생 기준입니다. 오른쪽 표에서 한 명씩 바꿀 수도 있습니다.</p>
+     <div class="ccounts">${CASES.map(c=>`<div><span class="cno">${c.no}</span><span>${esc(c.type)}</span><b class="num">${ccount[c.id]}</b></div>`).join('')}<div class="${unassigned?'warn':''}"><span class="cno">–</span><span>미배정</span><b class="num">${unassigned}</b></div></div>
+     <span class="flbl" style="margin-top:14px">자동 배정에 쓸 케이스</span>
+     <div class="chips" role="group" aria-label="자동 배정 케이스">${CASES.map(c=>`<button data-act="pool" data-v="${c.id}" aria-pressed="${pool.includes(c.id)}">${c.no}. ${esc(c.short)}</button>`).join('')}</div>
+     <div class="row" style="margin-top:10px"><button class="btn primary" data-act="autoAssign" ${unassigned?'':'disabled'}>미배정 ${unassigned}명에게 고르게 배정</button><small id="assignMsg" style="color:var(--muted)"></small></div>
+     <p style="margin:8px 0 0;font-size:12px;color:var(--muted)">면접 시간 순서대로, 인원이 적은 케이스부터 채웁니다. 이미 배정된 교육생은 바꾸지 않습니다.</p>
+     <span class="flbl" style="margin-top:16px">당일 배부용</span>
+     <div class="row"><button class="btn" data-act="assignCsv">배정표 CSV</button><small style="color:var(--muted)">케이스지는 출력용 PPT로 따로 준비했습니다.</small></div></div>
+   </div>
+   <div class="card" style="padding:0;min-width:0"><div style="padding:14px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid var(--line)"><h3 style="margin:0;flex:1">등록 현황 <span class="num" style="color:var(--muted);font-size:13px;font-weight:500">홍대 ${counts.홍대||0}명 · 천안 ${counts.천안||0}명</span></h3>${campusSeg()}</div>
+     <div style="overflow-x:auto;max-height:720px"><table style="min-width:520px"><thead><tr><th>캠퍼스</th><th>시간·조</th><th>이름</th><th>면접실·과제</th><th>케이스</th><th></th></tr></thead><tbody>
+     ${list.map(s=>`<tr><td>${esc(s.campus)}</td><td class="num">${esc(s.slot||s.team||'')}</td><td>${esc(s.name)}</td><td style="white-space:normal;min-width:160px">${esc(s.room||'')}${s.project?`<small style="color:var(--muted)">${esc(s.project)}</small>`:''}</td>
+       <td><select class="case-sel" id="case-${s.id}" data-assign="${s.id}" aria-label="${esc(s.name)} 케이스"><option value="">미배정</option>${CASES.map(c=>`<option value="${c.id}" ${s.caseId===c.id?'selected':''}>${c.no}. ${esc(c.type)}</option>`).join('')}</select></td>
+       <td style="text-align:right">${S.rosterConfirm===s.id?`<span class="confirm">평가도 함께 삭제됩니다 <button class="btn danger" data-act="del" data-v="${s.id}">삭제</button><button class="btn ghost" data-act="delCancel">취소</button></span>`:`<button class="btn ghost" data-act="delAsk" data-v="${s.id}">삭제</button>`}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">아직 등록된 교육생이 없습니다</td></tr>'}
+     </tbody></table></div></div></div>`;
+}
+async function importRoster(file){
+  const msg=$('#importMsg'); if(!file) return;
+  let list; try{ list=JSON.parse(await file.text()); }catch(e){ msg.textContent='파일을 읽지 못했습니다. 명단 .json 파일인지 확인해 주세요.'; return; }
+  if(!Array.isArray(list)||!list.every(x=>x&&typeof x.id==='string'&&x.data&&x.data.name)){ msg.textContent='명단 형식이 아닙니다. [{"id":..., "data":{"name":...}}] 형태여야 합니다.'; return; }
+  if(S.demo){ list.forEach(x=>S.students[x.id]=x.data); render(); return; }
+  msg.textContent=`${list.length}명 등록 중…`;
+  let ok=0;
+  for(const x of list){ try{ await S.db.doc('students/'+x.id).set(x.data); ok++; msg.textContent=`${ok}/${list.length}명 등록 중…`; }
+    catch(err){ msg.textContent=isDenied(err)?'등록 권한이 없습니다. 로그인 상태를 확인해 주세요.':'일부를 등록하지 못했습니다. 다시 시도해 주세요.'; return; } }
+  msg.textContent=`${ok}명을 등록했습니다`; toast(`명단 ${ok}명을 불러왔습니다`);
+}
+async function assignCase(sid, cid){
+  if(!S.students[sid]) return;
+  if(S.demo){ S.students[sid].caseId=cid||undefined; if(S.view!=='input') render(); return; }
+  try{ await S.db.doc('students/'+sid).update({caseId:cid||null}); }
+  catch(err){ toast(isDenied(err)?'케이스를 배정할 권한이 없습니다':'케이스를 저장하지 못했습니다. 다시 시도해 주세요'); }
+}
+async function autoAssign(){
+  const pool=(S.casePool||CASES.map(c=>c.id)).filter(id=>CASE_BY[id]);
+  const list=sortedStudents(), targets=list.filter(s=>!s.caseId);
+  const cnt=Object.fromEntries(pool.map(id=>[id,list.filter(s=>s.caseId===id).length]));
+  let last=null; const plan=[];
+  for(const s of targets){
+    const cand=[...pool].sort((x,y)=>cnt[x]-cnt[y] || (x===last)-(y===last) || pool.indexOf(x)-pool.indexOf(y));
+    const pick=cand[0]; cnt[pick]++; last=pick; plan.push([s.id,pick]);
+  }
+  const msg=$('#assignMsg'); if(msg) msg.textContent=`${plan.length}명 배정 중…`;
+  if(S.demo){ plan.forEach(([id,c])=>S.students[id].caseId=c); render(); toast(`${plan.length}명에게 케이스를 배정했습니다`); return; }
+  let ok=0; for(const [id,c] of plan){ try{ await S.db.doc('students/'+id).update({caseId:c}); ok++; }catch(err){ if(isDenied(err)){ toast('케이스를 배정할 권한이 없습니다'); break; } } }
+  toast(`${ok}명에게 케이스를 배정했습니다`);
+}
+function caseSheetBody(c){
+  return `<section class="cs"><h1>케이스 면접 — ${esc(c.no)}. ${esc(c.type)}</h1>
+   <p class="sub">K-뉴딜 아카데미 모의면접 · AI 에이전트 기반 서비스 개발 과정</p>
+   <h2>${esc(c.title)}</h2>
+   <div class="box"><b>상황</b>${c.situation.map(p=>`<p>${esc(p)}</p>`).join('')}</div>
+   <div class="note">면접 당일 · ${esc(c.time)}</div>
+   <div class="box q"><b>${c.qs.length>1?'질문 — 다음을 순서대로 답해 주세요.':'질문'}</b><ol>${c.qs.map(q=>`<li>${c.qs.length>1?`<strong>${esc(q[0])}</strong><br>`:''}${esc(q[1])}</li>`).join('')}</ol></div>
+   <div class="box memo"><b>준비 메모</b></div></section>`;
+}
+function downloadCaseSheet(id){
+  const cs = id==='all' ? CASES : [caseOf(id)];
+  const html=`<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>모의면접 케이스</title>
+<style>body{font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;color:#111;background:#fff;margin:0;padding:24px 16px;line-height:1.7}
+.cs{max-width:780px;margin:0 auto 48px;page-break-after:always}.cs:last-child{page-break-after:auto}
+h1{text-align:center;font-size:22px;margin:0}.sub{text-align:center;color:#555;font-size:13px;margin:4px 0 20px}h2{font-size:18px;margin:0 0 12px}
+.box{border:2px solid #111;padding:16px 22px;margin:14px 0}.box p{margin:6px 0}.box b{display:block;margin-bottom:6px}
+.note{border:1px dashed #555;text-align:center;padding:10px;font-weight:700}.q{background:#f3f3f3}.q li{margin:10px 0}.memo{min-height:180px}</style></head><body>${cs.map(caseSheetBody).join('')}</body></html>`;
+  save(id==='all'?'모의면접_케이스지_5종.html':`모의면접_케이스지_${cs[0].no}_${cs[0].short}.html`, html);
+}
+function downloadAssignCSV(){
+  const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const lines=[['캠퍼스','시간','조','이름','면접실','캡스톤 과제','케이스 번호','케이스 유형','케이스 제목'].map(q).join(',')];
+  sortedStudents().forEach(s=>{const c=CASE_BY[s.caseId]; lines.push([s.campus,s.slot,s.team,s.name,s.room,s.project,c?.no,c?.type,c?.title].map(q).join(','));});
+  save(`모의면접_케이스배정_${new Date().toISOString().slice(0,10)}.csv`, '﻿'+lines.join('\r\n'));
+}
+
+/* ───────── 이벤트 ───────── */
+document.addEventListener('click', async e=>{
+  const tab=e.target.closest('nav.tabs button'); if(tab){S.view=tab.dataset.view; S.finalDraft=null; S.finalDirty=false; render(); window.scrollTo(0,0); return;}
+  const el=e.target.closest('[data-act]'); if(!el) return;
+  const act=el.dataset.act, v=el.dataset.v;
+  if(act==='campus'){S.campus=v; LS.set('campus',v); S.finalDraft=null; S.resultSel=null; render();}
+  else if(act==='go'){S.view=v; render();}
+  else if(act==='sel'){ if(S.sel===v) return; S.sel=v; loadDraft(); render(); if(innerWidth<=860) $('.sheet')?.scrollIntoView({behavior:'smooth'});}
+  else if(act==='role'){ S.role=v; LS.set('role',v); loadDraft(); render();}
+  else if(act==='score'){ const f=el.dataset.f,k=el.dataset.k,n=+v; S.draft[f][k] = S.draft[f][k]===n?undefined:n; if(S.draft[f][k]===undefined) delete S.draft[f][k]; markDirty();
+      el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===S.draft[f][k]));
+      const items=f==='scores'?COMMON:caseOf(S.draft.caseId).items, it=items.find(i=>i.k===k); el.closest('.rrow').querySelector('.pts').innerHTML=`${S.draft[f][k]?fmt(S.draft[f][k]*it.w/5,0):'–'}<small>/${it.w}</small>`;
+      const c=conv(S.draft[f],items); el.closest('.card').querySelector('.subtotal .num').firstChild.textContent=(c.filled?fmt(c.total,0):'–')+' ';}
+  else if(act==='save') saveEval();
+  else if(act==='case'){ if(S.draft.caseId===v) return; S.draft.caseId=v; markDirty(); assignCase(S.sel,v); const y=scrollY; render(); scrollTo(0,y); }
+  else if(act==='pool'){ const p=S.casePool||CASES.map(c=>c.id); const i=p.indexOf(v); if(i<0) p.push(v); else if(p.length>1) p.splice(i,1); S.casePool=p; render(); }
+  else if(act==='autoAssign') autoAssign();
+  else if(act==='caseSheet') downloadCaseSheet(v);
+  else if(act==='assignCsv') downloadAssignCSV();
+  else if(act==='present') present(caseOf(S.draft.caseId));
+  else if(act==='closePresent') $('#present').hidden=true;
+  else if(act==='nv'){const k=el.dataset.k; if(S.draft.nv[k]===v) delete S.draft.nv[k]; else S.draft.nv[k]=v; el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.draft.nv[k])); markDirty();}
+  else if(act==='job'){const j=S.draft.jobs, i=j.indexOf(v); if(i<0) j.push(v); else j.splice(i,1); el.setAttribute('aria-pressed',i<0); markDirty();}
+  else if(act==='timer'){const t=S.timer; if(t.run){t.elapsed+=Date.now()-t.start;t.run=false}else{t.start=Date.now();t.run=true} el.textContent=t.run?'일시정지':'계속';}
+  else if(act==='treset'){S.timer={start:null,elapsed:0,run:false}; render();}
+  else if(act==='openResult'){S.resultSel=v; S.view='result'; S.finalDraft=null; S.finalDirty=false; render(); window.scrollTo(0,0);}
+  else if(act==='rnav'){const l=sortedStudents(); const i=l.findIndex(x=>x.id===S.resultSel)+(+v); if(l[i]){S.resultSel=l[i].id; S.finalDraft=null; S.finalDirty=false; render();}}
+  else if(act==='saveFinal') saveFinal();
+  else if(act==='deliver') setDelivered(v==='1');
+  else if(act==='copy'){const txt=sheetText(S.resultSel); try{await navigator.clipboard.writeText(txt); toast('결과지 텍스트를 복사했습니다');}catch(err){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('결과지 텍스트를 복사했습니다')}catch(_){toast('복사가 막혀 있습니다. 결과지를 직접 선택해 복사하세요')} ta.remove();}}
+  else if(act==='dl') downloadSheet();
+  else if(act==='csv') downloadCSV();
+  else if(act==='bulkAdd') bulkAdd();
+  else if(act==='delAsk'){S.rosterConfirm=v; render();}
+  else if(act==='delCancel'){S.rosterConfirm=null; render();}
+  else if(act==='del') delStudent(v);
+});
+document.addEventListener('input', e=>{
+  const t=e.target;
+  if(t.id==='q'){S.search=t.value.trim(); const pos=t.selectionStart; render(); const q=$('#q'); q.focus(); q.setSelectionRange(pos,pos); return;}
+  if(t.id==='finalText'){S.finalDraft=t.value; markFinalDirty(); refreshPaper(); return;}
+  if(t.dataset.ftop!=null){S.finalTop[+t.dataset.ftop]=t.value; markFinalDirty(); refreshPaper(); return;}
+  if(!S.draft) return;
+  if(t.dataset.note){S.draft.notes[t.dataset.note]=t.value; markDirty();}
+  else if(t.dataset.top!=null){S.draft.top3[+t.dataset.top]=t.value; markDirty();}
+  else if(t.dataset.fb){S.draft[t.dataset.fb]=t.value; markDirty(); if(t.id==='prepQs'){const pl=$('#preplist'); if(pl) pl.innerHTML=prepList();}}
+  else if(t.id==='iv'){S.draft.interviewer=t.value; LS.set('iv:'+S.role,t.value); markDirty();}
+});
+function markFinalDirty(){ if(!S.finalDirty){S.finalDirty=true; const b=document.querySelector('[data-act="saveFinal"]'); if(b) b.textContent='결과지 내용 저장';} }
+function refreshPaper(){ const p=$('#paper'); if(p&&S.resultSel) p.outerHTML=sheetHTML(S.resultSel); }
+document.addEventListener('change', e=>{ if(e.target.id==='rosterFile'){importRoster(e.target.files?.[0]); e.target.value=''; return;} if(e.target.dataset.assign){assignCase(e.target.dataset.assign, e.target.value||null); return;} if(e.target.id==='rsel'){S.resultSel=e.target.value; S.finalDraft=null; S.finalDirty=false; render();} });
+addEventListener('keydown', e=>{ if(e.key==='Escape'&&!$('#present').hidden){$('#present').hidden=true;return;} if(e.key==='Enter'&&e.target.matches?.('tr[data-act]')){e.target.click();return;} if((e.metaKey||e.ctrlKey)&&e.key==='s'&&S.view==='input'&&S.draft){e.preventDefault(); saveEval();} });
+
+/* ───────── 저장 ───────── */
+function isDenied(err){return err&&(err.code==='invalid_argument'||err.code==='not_granted'||err.code==='permission-denied'||err.code==='unauthenticated')}
+async function saveEval(){
+  if(!S.draft||S.saving) return;
+  if(!S.draft.interviewer?.trim()){S.saveErr=true; S.saveMsg='면접관 이름을 입력해 주세요'; renderSavebar(); $('#iv')?.focus(); return;}
+  const key=S.sel+'__'+S.role;
+  const body={sid:S.sel, role:S.role, interviewer:S.draft.interviewer.trim(), scores:S.draft.scores, caseId:S.draft.caseId, caseScores:Object.fromEntries(Object.entries(S.draft.caseScores).filter(([k])=>caseOf(S.draft.caseId).items.some(i=>i.k===k))), notes:S.draft.notes, strengths:S.draft.strengths||'', improve:S.draft.improve||'', oneLine:S.draft.oneLine||'',
+    nv:S.draft.nv, habitWords:S.draft.habitWords||'', top3:S.draft.top3,
+    prepQs:S.draft.prepQs||'', jobs:S.draft.jobs, jobNote:S.draft.jobNote||'', followups:S.draft.followups||'', updatedAt:Date.now()};
+  if(S.demo){S.evals[key]=body; S.dirty=false; S.saveMsg='예시 화면이라 이 브라우저에서만 반영됩니다'; render(); return;}
+  S.saving=true; renderSavebar();
+  try{ await S.db.doc('evals/'+key).set(body); S.dirty=false; S.saveErr=false; S.saveMsg=`저장됨 · ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`; try{localStorage.removeItem('kmi:draft:'+key)}catch(_){} toast(`${S.students[S.sel]?.name} · ${ROLES[S.role].short} 평가를 저장했습니다`);}
+  catch(err){S.saveErr=true; S.saveMsg=isDenied(err)?'저장 권한이 없습니다. 로그인이 만료됐다면 새로고침 후 다시 로그인해 주세요':'저장하지 못했습니다. 잠시 후 다시 눌러 주세요 (입력 내용은 이 브라우저에 보관 중)';}
+  S.saving=false; render();
+}
+async function saveFinal(){
+  const sid=S.resultSel, prev=S.finals[sid]||{};
+  const body={...prev, comment:S.finalDraft||'', top3:S.finalTop||[], updatedAt:Date.now()};
+  if(S.demo){S.finals[sid]=body; S.finalDirty=false; render(); toast('종합 피드백을 반영했습니다 (예시)'); return;}
+  try{await S.db.doc('finals/'+sid).set(body); S.finalDirty=false; toast('종합 피드백을 저장했습니다'); render();}
+  catch(err){toast(isDenied(err)?'저장 권한이 없습니다':'저장하지 못했습니다. 다시 시도해 주세요');}
+}
+async function setDelivered(on){
+  const sid=S.resultSel, prev=S.finals[sid]||{};
+  const body={...prev, comment:S.finalDraft||'', top3:S.finalTop||[], delivered:on, deliveredAt:on?Date.now():null, updatedAt:Date.now()};
+  if(S.demo){S.finals[sid]=body; S.finalDirty=false; render(); return;}
+  try{await S.db.doc('finals/'+sid).set(body); S.finalDirty=false; toast(on?'전달 완료로 표시했습니다':'전달 표시를 취소했습니다');}
+  catch(err){toast('저장하지 못했습니다. 다시 시도해 주세요');}
+}
+async function bulkAdd(){
+  const campus=$('#bulkCampus').value, raw=$('#bulk').value; const msg=$('#bulkMsg');
+  const rows=raw.split('\n').map(l=>l.split(/\t|,/).map(x=>x.trim())).filter(r=>r[0]);
+  if(!rows.length){msg.textContent='붙여넣은 명단이 없습니다'; return;}
+  const docs=rows.map(r=>{const c=CASES.find(c=>c.no===String(r[3]||'').trim()); const d={name:r[0], slot:(r[1]||'').replace(/^(\d):/,'0$1:'), room:r[2]||'', campus, createdAt:Date.now()}; if(c) d.caseId=c.id; return d;});
+  if(S.demo){docs.forEach((d,i)=>S.students['demo'+Date.now()+i]=d); render(); return;}
+  msg.textContent=`${docs.length}명 등록 중…`;
+  let ok=0; for(const d of docs){ try{await S.db.collection('students').add(d); ok++;}catch(err){ if(isDenied(err)){msg.textContent='등록 권한이 없습니다'; return;} } }
+  $('#bulk').value=''; msg.textContent=`${ok}명을 등록했습니다`;
+}
+async function delStudent(sid){
+  S.rosterConfirm=null;
+  if(S.demo){delete S.students[sid]; render(); return;}
+  try{ await S.db.doc('students/'+sid).delete(); for(const r of ['hr','tech']) await S.db.doc('evals/'+sid+'__'+r).delete(); await S.db.doc('finals/'+sid).delete(); toast('삭제했습니다');}catch(err){toast('삭제하지 못했습니다');}
+}
+
+/* ───────── 파일 저장 ───────── */
+async function save(filename, data){
+  let dl=null; try{ dl = await window.claude?.use?.('downloads'); }catch(e){}
+  if(!dl){
+    const type=filename.endsWith('.csv')?'text/csv;charset=utf-8':'text/html;charset=utf-8';
+    const blob=data instanceof Blob?data:new Blob([data],{type});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); toast('파일을 저장했습니다'); return;
+  }
+  try{await dl.save({filename,data}); toast('파일을 저장했습니다');}catch(err){ if(err?.code!=='declined') toast('파일을 저장하지 못했습니다'); }
+}
+function downloadSheet(){
+  const sid=S.resultSel, s=S.students[sid];
+  const css=[...document.querySelectorAll('style')].map(x=>x.textContent).join('\n');
+  const html=`<!doctype html><html lang="ko" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>모의면접 피드백 - ${esc(s.name)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&family=Nanum+Myeongjo:wght@700;800&display=swap"><style>${css}
+  body{padding:24px 16px} .paper{max-width:820px;margin:0 auto} @media print{body{padding:0}.paper{box-shadow:none;border:0}}</style></head><body data-theme="light">${sheetHTML(sid,true)}</body></html>`;
+  save(`모의면접_피드백_${s.campus}_${s.name}.html`, html);
+}
+function downloadCSV(){
+  const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const head=['캠퍼스','시간','이름','인사 면접관','실무 면접관',...COMMON.map(i=>`${i.name}(평균/5)`),'환산점수(/100)','Case(/100)','케이스 유형','우선개선과제','추천직무','예상꼬리질문','강점','개선과제','종합의견','전달'];
+  const lines=[head.map(q).join(',')];
+  sortedStudents().forEach(s=>{const a=aggregate(s.id),f=S.finals[s.id]||{},hr=EV(s.id,'hr'),te=EV(s.id,'tech');
+    lines.push([s.campus,s.slot,s.name,hr?.interviewer,te?.interviewer,...COMMON.map(i=>a.common[i.k]!=null?fmt(a.common[i.k],2):''),a.commonTotal.total!=null?fmt(a.commonTotal.total):'',a.caseTotal.total!=null?fmt(a.caseTotal.total):'', a.caseTotal.total!=null?a.caseDef.type:'',
+      ((f.top3&&f.top3.some(Boolean))?f.top3:a.top3).filter(Boolean).join(' / '),
+      [...new Set(a.ev.flatMap(e=>e.jobs||[]))].join(', '), [...new Set(a.ev.flatMap(e=>(e.followups||'').split('\n').map(x=>x.trim()).filter(Boolean)))].join(' / '),
+      a.ev.map(e=>e.strengths).filter(Boolean).join(' / '),a.ev.map(e=>e.improve).filter(Boolean).join(' / '),f.comment||'',f.delivered?'완료':''].map(q).join(','))});
+  save(`모의면접_취합_${new Date().toISOString().slice(0,10)}.csv`, '﻿'+lines.join('\r\n'));
+}
+
+
+/* ───────── Firebase 로그인 ───────── */
+function loginView(auth, msg){
+  $('#savebar').hidden=true;
+  $('#main').innerHTML=`<div class="card login"><h2>면접관 로그인</h2>
+    <p>운영 담당자에게 받은 이메일과 비밀번호로 로그인하세요.</p>
+    <form id="loginForm" novalidate>
+      <label class="f">이메일<input type="text" id="lgEmail" autocomplete="username" inputmode="email" required></label>
+      <label class="f">비밀번호<input type="password" id="lgPw" autocomplete="current-password" required></label>
+      <p class="lg-msg" id="lgMsg">${esc(msg||'')}</p>
+      <button class="btn primary" type="submit" id="lgBtn">로그인</button>
+    </form></div>`;
+  $('#loginForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const email=$('#lgEmail').value.trim(), password=$('#lgPw').value, btn=$('#lgBtn'), m=$('#lgMsg');
+    if(!email||!password){ m.textContent='이메일과 비밀번호를 모두 입력해 주세요.'; return; }
+    btn.disabled=true; btn.textContent='로그인 중…';
+    try{ await auth.signInWithEmailAndPassword(email,password); location.reload(); }
+    catch(err){ btn.disabled=false; btn.textContent='로그인';
+      m.textContent = err?.code==='auth/too-many-requests' ? '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+                    : err?.code==='auth/network-request-failed' ? '네트워크에 연결할 수 없습니다. 인터넷 연결을 확인해 주세요.'
+                    : '로그인하지 못했습니다. 이메일과 비밀번호를 확인해 주세요.'; }
+  });
+  $('#lgEmail').focus();
+}
+
+/* ───────── 데이터 연결 ───────── */
+function demoData(){
+  S.demo=true; S.ready=true;
+  S.students={d1:{name:'예시 교육생 A',campus:'홍대',slot:'09:00',room:'A실',caseId:'sec'},d2:{name:'예시 교육생 B',campus:'홍대',slot:'09:20',room:'A실',caseId:'a'},d3:{name:'예시 교육생 C',campus:'천안',slot:'10:00',room:'1실'}};
+  S.evals={
+    'd1__hr':{interviewer:'인사 면접관(예시)',role:'hr',prepQs:'팀 갈등을 조율했다는 경험 — 본인이 직접 제안한 해결책은 무엇이었는지\n지원 동기의 “사람을 돕는 AI”가 구체적으로 어떤 서비스인지',nv:{speed:'빠름',eye:'안정적',habit:'가끔',length:'적절'},habitWords:'약간, 그냥',jobs:['AI 서비스 기획(PM)'],jobNote:'사용자와 팀의 관점을 함께 보는 시야가 기획 직무에 잘 맞습니다.',followups:'갈등 조율 후 팀 성과는 어떻게 달라졌나요?',top3:['지원 동기를 본인이 해결하고 싶은 문제 한 문장으로 정리하기','긴장하면 빨라지는 말 속도를 한 박자 늦추기',''],scores:{comm:4,prob:3,ai:4,init:4,collab:5,motiv:4},caseScores:{risk:3,tech:3,prio:3,logic:4,resp:4},notes:{},strengths:'팀 프로젝트에서 갈등을 조율한 과정을 상황-행동-결과 순서로 명확히 설명했습니다.',improve:'지원 동기에서 “AI가 유망해서”를 넘어, 본인이 해결하고 싶은 문제를 한 문장으로 정리해 보세요.',oneLine:'협업 태도가 돋보이는 지원자',updatedAt:Date.now()},
+    'd1__tech':{interviewer:'실무 면접관(예시)',role:'tech',prepQs:'RAG 챗봇 프로젝트 — 검색 품질을 어떻게 측정했는지',nv:{speed:'빠름',eye:'가끔 흔들림',habit:'가끔',length:'김'},habitWords:'사실',jobs:['AI 에이전트 개발','AI 서비스 기획(PM)'],jobNote:'위험을 먼저 정의하는 습관이 있어 에이전트 설계 업무에 강점이 있습니다.',followups:'권한 메타데이터가 없는 문서는 어떻게 처리하겠습니까?\n답변 검증 단계에서 오탐이 많으면 어떻게 조정하겠습니까?',top3:['Case 답변을 위험 → 원인 → 대책 순서로 구조화하기','기술 답변은 결론 먼저, 근거는 두 가지로 압축하기',''],scores:{comm:4,prob:4,ai:3,init:3,collab:4,motiv:4},caseScores:{risk:4,tech:3,prio:2,logic:4,resp:4},notes:{},strengths:'Case에서 직접 노출과 요약을 통한 간접 유출을 구분해 위험을 정의했습니다.',improve:'권한 필터링을 검색 단계에서 적용해야 하는 이유와, 권한 정보가 없는 문서의 기본 처리(차단 우선)를 함께 제시하면 좋겠습니다.',oneLine:'위험 인식은 좋고 설계 구체성 보완 필요',updatedAt:Date.now()},
+    'd2__hr':{interviewer:'인사 면접관(예시)',role:'hr',scores:{comm:3,prob:3,ai:4,init:2,collab:3,motiv:3},caseScores:{},notes:{},strengths:'관심 기술을 직접 써 본 경험을 구체적으로 말했습니다.',improve:'프로젝트에서 본인이 직접 결정한 부분을 먼저 말하는 연습을 해 보세요.',oneLine:'',updatedAt:Date.now()},
+  };
+  S.finals={};
+}
+async function connect(){
+  const c=$('#conn');
+  let db=null;
+  if(FIREBASE_CONFIG.apiKey && window.firebase){
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const auth=firebase.auth();
+    const user=await new Promise(res=>{ const un=auth.onAuthStateChanged(u=>{ un(); res(u); }); });
+    if(!user){ c.textContent='로그인 필요'; c.className='conn'; loginView(auth); return; }
+    db=firebase.firestore();
+    c.innerHTML=`${esc(user.email||'')} · <button class="linkbtn" id="logout">로그아웃</button>`; c.className='conn ok';
+    $('#logout').addEventListener('click', async()=>{ await auth.signOut(); location.reload(); });
+  } else {
+    try{ db = await window.claude?.use?.('db'); }catch(e){}
+    if(db){ c.textContent='실시간 공유 중'; c.className='conn ok'; }
+  }
+  if(!db){ demoData(); c.textContent='예시 데이터'; c.className='conn demo'; render(); return; }
+  S.db=db;
+  const fail=e=>{c.textContent='연결 끊김 · 새로고침 필요'; c.className='conn';};
+  let got=0; const settle=()=>{ if(++got>=1){S.ready=true;} };
+  const smartRender=()=>{
+    // 입력 중일 때 전체를 다시 그리지 않음: 명단 점과 상단만 갱신
+    const a=document.activeElement;
+    if(S.view==='input' && a && (a.tagName==='TEXTAREA'||a.tagName==='INPUT') && a.id!=='q'){ refreshRosterDots(); return; }
+    if(S.view==='result' && a && (a.id==='finalText'||a.dataset?.ftop!=null)){ return; }
+    render();
+  };
+  db.collection('students').onSnapshot(snap=>{ S.students={}; snap.docs.forEach(d=>S.students[d.id]=d.data()); if(S.sel&&!S.students[S.sel]){S.sel=null;S.draft=null;} else if(S.draft&&S.students[S.sel]?.caseId&&S.draft.caseId!==S.students[S.sel].caseId){S.draft.caseId=S.students[S.sel].caseId;} settle(); smartRender(); }, fail);
+  db.collection('evals').onSnapshot(snap=>{ S.evals={}; snap.docs.forEach(d=>S.evals[d.id]=d.data()); if(!S.finalDirty) S.finalDraft=null; if(S.sel&&!S.dirty&&!S.draft) loadDraft(); smartRender(); }, fail);
+  db.collection('finals').onSnapshot(snap=>{ S.finals={}; snap.docs.forEach(d=>S.finals[d.id]=d.data()); if(!S.finalDirty) S.finalDraft=null; smartRender(); }, fail);
+}
+function refreshRosterDots(){
+  document.querySelectorAll('.roster li button').forEach(b=>{const id=b.dataset.v; b.querySelectorAll('.dot').forEach((d,i)=>{const r=i?'tech':'hr'; d.classList.toggle('on',!!EV(id,r)); d.classList.toggle('prep',!EV(id,r)&&!!S.evals[id+'__'+r]);})});
+}
+render();
+connect();
+})();
+</script>
+
+</body>
+</html>

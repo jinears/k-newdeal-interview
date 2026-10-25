@@ -1,0 +1,12 @@
+rules_version = '2';
+// K-뉴딜 모의면접 피드백 보드 · Firestore 보안 규칙
+// Firebase 콘솔 → Firestore Database → 규칙(Rules) 탭에 전체를 붙여넣고 [게시]를 누르세요.
+// 로그인한 면접관만 교육생(students) · 평가(evals) · 결과지(finals)를 읽고 쓸 수 있습니다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{col}/{docId} {
+      allow read, write: if request.auth != null
+                         && col in ['students', 'evals', 'finals'];
+    }
+  }
+}
