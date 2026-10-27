@@ -214,6 +214,12 @@ tr.click{cursor:pointer}
 .confirm{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--bad)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:13px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
+/* 명단 정리 */
+.card.cleanup{border-color:var(--warn);margin-bottom:16px}
+.clist{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto}
+.crow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px}
+.crow:hover{background:var(--surface-2)}
+.cmeta{color:var(--muted);font-size:12px}
 /* 면접관 지정 */
 .ivgroups{display:flex;flex-direction:column;gap:8px}
 .ivg{display:grid;grid-template-columns:minmax(110px,150px) minmax(0,1fr) auto;gap:8px;align-items:center}
@@ -463,7 +469,7 @@ const SECTIONS = [
   {k:'cover', name:'자기소개서 기반 질문', min:4, lead:'hr', focus:'주도성, 책임감, 협업, 경험의 진정성',
    q:['가장 의미 있었던 경험 → 본인이 직접 한 일은?','팀 활동 중 어려움을 겪었던 경험 → 의견 차이를 어떻게 해결했나요?','실패하거나 계획대로 되지 않았던 경험 → 무엇을 배웠고 이후 어떻게 달라졌나요?','본인의 강점 → 그 강점을 보여주는 구체적 사례는?'],
    tip:'상황 → 본인의 행동 → 결과 → 배운 점 순서로 질문합니다.'},
-  {k:'close', name:'마무리', min:2, lead:'hr', focus:'핵심 전달력, 태도, 강점 정리', q:['마지막으로 하고 싶은 말이나 오늘 답변했던 내용 중 보충하고 싶은 부분이 있나요?']},
+  {k:'close', name:'마무리', min:2, lead:'hr', focus:'핵심 전달력, 태도, 강점 정리', q:['마지막으로 하고 싶은 말이나 질문이 있나요?']},
 ];
 
 /* ───────── 상태 ───────── */
@@ -474,7 +480,7 @@ const S = {
   draft:null, dirty:false, saving:false, saveMsg:'', saveErr:false,
   resultSel:null, finalDraft:null, finalDirty:false, finalTop:null,
   timer:{start:null, elapsed:0, run:false},
-  rosterConfirm:null, casePool:null, me:null,
+  rosterConfirm:null, casePool:null, me:null, cleanSel:{}, cleanConfirm:false, cleaning:false,
 };
 const LS = {get(k,d){try{const v=localStorage.getItem('kmi:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
             set(k,v){try{localStorage.setItem('kmi:'+k,JSON.stringify(v))}catch(e){}}};
@@ -519,7 +525,7 @@ function sortedStudents(){
     .sort((a,b)=>(a.campus||'').localeCompare(b.campus||'')||(a.date||'').localeCompare(b.date||'')||(a.slot||'99').localeCompare(b.slot||'99')||(a.room||'').localeCompare(b.room||'')||(a.team||'').localeCompare(b.team||'','ko')||(a.name||'').localeCompare(b.name||'','ko'));
 }
 function blankDraft(){const st=S.students[S.sel]; return {interviewer:(st&&st[S.role==='tech'?'ivTech':'ivHr'])||LS.get('iv:'+S.role,''), scores:{}, caseScores:{}, notes:{}, strengths:'', improve:'', oneLine:'',
-  nv:{}, habitWords:'', top3:['','',''], prepQs:'', jobs:[], jobNote:'', followups:''}}
+  nv:{}, habitWords:'', top3:['','',''], prepQs:'', memo:''}}
 function loadDraft(){
   if(!S.sel){S.draft=null;return}
   const key=S.sel+'__'+S.role, saved=S.evals[key];
@@ -528,7 +534,7 @@ function loadDraft(){
   else {S.draft = saved ? JSON.parse(JSON.stringify(saved)) : blankDraft(); S.dirty=false; S.saveMsg = saved?`저장됨 · ${new Date(saved.updatedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`:'아직 입력 전';}
   S.draft.scores ||= {}; S.draft.caseScores ||= {}; S.draft.notes ||= {};
   { const oe=S.evals[S.sel+'__'+(S.role==='hr'?'tech':'hr')]; S.draft.caseId = S.students[S.sel]?.caseId || S.draft.caseId || oe?.caseId || 'sec'; }
-  S.draft.nv ||= {}; S.draft.jobs ||= []; S.draft.top3 = [0,1,2].map(i=>(S.draft.top3||[])[i]||'');
+  S.draft.nv ||= {}; S.draft.top3 = [0,1,2].map(i=>(S.draft.top3||[])[i]||'');
   S.saveErr=false;
 }
 function markDirty(){S.dirty=true; S.saveErr=false; S.saveMsg='저장하지 않은 변경이 있습니다'; const k=S.sel+'__'+S.role; LS.set('draft:'+k,{...S.draft,_ts:Date.now()}); renderSavebar();}
@@ -623,11 +629,8 @@ function evalForm(){
     <div style="margin-top:14px"><span class="flbl">우선 개선 과제 Top 3 <small>· 다음 면접까지 할 일을 중요한 순서대로</small></span>
       ${[0,1,2].map(i=>`<div class="topin"><span class="no">${i+1}</span><input type="text" id="top-${i}" data-top="${i}" value="${esc(d.top3[i])}" placeholder="${['예: 프로젝트 답변은 본인이 결정한 것부터 말하기','예: Case 답변을 위험 → 원인 → 대책 순서로 구조화하기','예: 지원 동기를 본인 경험 한 가지와 연결하기'][i]}" aria-label="우선 개선 과제 ${i+1}"></div>`).join('')}</div>
     <label class="f" style="margin-top:12px">한 줄 총평<input type="text" id="oneLine" data-fb="oneLine" value="${esc(d.oneLine)}" placeholder="예: 논리는 탄탄하나 본인 기여를 더 선명하게"></label></div>
-  <div class="card"><h3 style="margin:0 0 10px">진로 · 다음 면접 준비</h3>${wg('작성 가이드',`<p><b>추천 직무</b>는 답변에서 드러난 강점 기준으로 고르고, 이유를 한 줄로 적어 주세요.</p><p><b>꼬리질문</b>은 시간이 없어 못 물었지만 실제 면접이라면 반드시 나올 질문입니다. 경험의 빈틈을 짚는 질문일수록 도움이 됩니다.</p>`)}
-    <span class="flbl">추천 직무 <small>· 복수 선택</small></span>
-    <div class="chips" role="group" aria-label="추천 직무">${JOBS.map(j=>`<button data-act="job" data-v="${esc(j)}" aria-pressed="${d.jobs.includes(j)}">${esc(j)}</button>`).join('')}</div>
-    <label class="f" style="margin-top:10px">추천 이유<input type="text" id="jobNote" data-fb="jobNote" value="${esc(d.jobNote)}" placeholder="예: 문제를 구조화하는 힘이 좋아 서비스 기획과 에이전트 설계에 잘 맞음"></label>
-    <label class="f" style="margin-top:10px">예상 꼬리질문 · 실제 면접이라면 더 물었을 것 <small style="font-weight:500">(한 줄에 하나)</small><textarea id="followups" data-fb="followups" placeholder="예: 권한 메타데이터가 없는 문서는 어떻게 처리하겠습니까?&#10;예: 팀원과 의견이 갈렸을 때 최종 결정은 누가 했나요?">${esc(d.followups)}</textarea></label></div>`;
+  <div class="card"><h3 style="margin:0">면접관 메모<small class="hint">교육생에게는 전달되지 않습니다 · 관리자와 같은 교육생 담당 면접관만 볼 수 있습니다</small></h3>
+    <textarea id="memo" data-fb="memo" style="min-height:160px;margin-top:10px" placeholder="자유롭게 적어 두세요. 예: 첫인상, 답변 중 인상 깊었던 표현, 점수를 그렇게 준 이유, 운영 담당자에게 전할 말">${esc(d.memo||'')}</textarea></div>`;
 }
 function wg(t,body){return `<details class="wguide"><summary>${t}</summary><div class="wg">${body}</div></details>`}
 function prepList(){
@@ -714,6 +717,7 @@ function viewResult(){
         <div class="row"><button class="btn" data-act="dl">결과지 파일 저장</button><button class="btn" data-act="copy">텍스트 복사</button></div>
         <div class="row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
           ${f.delivered?`<span class="pill good">전달 완료 · ${new Date(f.deliveredAt).toLocaleDateString('ko-KR')}</span><button class="btn ghost" data-act="deliver" data-v="0">취소</button>`:`<button class="btn" data-act="deliver" data-v="1" ${a.ev.length?'':'disabled'}>전달 완료로 표시</button>`}</div></div>
+      ${a.ev.some(e=>e.memo?.trim())?`<div class="card"><h3>면접관 메모 <small style="font-weight:500;color:var(--muted)">· 교육생 비공개</small></h3>${a.ev.filter(e=>e.memo?.trim()).map(e=>`<p style="margin:0 0 8px;white-space:pre-wrap;color:var(--fg)"><b>${esc(ROLES[e.role]?.short||'')} ${esc(e.interviewer||'')}</b><br>${esc(e.memo)}</p>`).join('')}</div>`:''}
       ${a.caseDiff?`<div class="card" style="border-color:var(--warn)"><h3 style="color:var(--warn)">케이스 불일치</h3><p>배정된 케이스와 다른 케이스로 채점된 평가가 있습니다. 결과지에는 「${esc(a.caseDef.type)}」 기준 점수만 반영됩니다. 해당 면접관에게 다시 채점을 요청하세요.</p></div>`:''}
       ${a.gaps.length?`<div class="card" style="border-color:var(--warn)"><h3 style="color:var(--warn)">점수 보정 확인</h3><p>${a.gaps.map(k=>esc(COMMON.find(c=>c.k===k).name)).join(', ')} 항목에서 두 면접관 점수가 2점 이상 차이 납니다. 전달 전에 근거를 맞춰 보세요.</p></div>`:''}
     </div></div>`;
@@ -732,8 +736,6 @@ function sheetHTML(sid, forFile){
     const same=vals.every(x=>x.v===vals[0].v);
     return `<div class="nvline"><span>${n.name}</span><span>${same?chip(n,vals[0].v):vals.map(x=>`<small>${ROLES[x.r]?.short||''}</small> ${chip(n,x.v)}`).join(' ')}</span></div>`}).join('');
   const habits=[...new Set(a.ev.flatMap(e=>(e.habitWords||'').split(/[,，、\s]+/).filter(Boolean)))];
-  const jobs=[...new Set(a.ev.flatMap(e=>e.jobs||[]))], jnotes=a.ev.map(e=>e.jobNote).filter(Boolean);
-  const fups=[...new Set(a.ev.flatMap(e=>(e.followups||'').split('\n').map(x=>x.trim()).filter(Boolean)))];
   return `<article class="paper" id="paper">
     <div class="eyebrow">K-뉴딜 아카데미 · AI 에이전트 기반 서비스 개발 과정</div>
     <h2>모의면접 피드백 결과지</h2>
@@ -748,9 +750,6 @@ function sheetHTML(sid, forFile){
     <h4>면접관 피드백</h4>
     <div class="fb"><div class="strong"><h5>잘한 점</h5>${fbList('strengths')}</div><div class="grow"><h5>다음 면접을 위한 개선 과제</h5>${fbList('improve')}</div></div>
     ${nvRows||habits.length?`<h4>말투·태도</h4><div class="nvgrid">${nvRows}</div>${habits.length?`<p class="habits">자주 쓴 습관어 · ${habits.map(h=>`<span>${esc(h)}</span>`).join('')}</p>`:''}`:''}
-    ${jobs.length||fups.length?`<h4>진로와 다음 면접 준비</h4><div class="fb">
-      ${jobs.length||jnotes.length?`<div><h5>추천 직무</h5><div class="jobchips">${jobs.map(j=>`<span>${esc(j)}</span>`).join('')}</div>${jnotes.map(n=>`<p>${esc(n)}</p>`).join('')}</div>`:''}
-      ${fups.length?`<div><h5>실제 면접에서 나올 수 있는 꼬리질문</h5><ol>${fups.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></div>`:''}</div>`:''}
     ${comment?`<h4>종합 의견</h4><div class="final-text">${esc(comment)}</div>`:''}
     <div class="foot">본 모의면접은 선발이 아닌 성장 지원을 목적으로 합니다. 점수보다 평가 근거와 개선 방향을 중심으로 활용해 주세요.</div>
   </article>`;
@@ -768,8 +767,6 @@ function sheetText(sid){
   const nv=NONVERBAL.map(n=>{const vs=[...new Set(a.ev.map(e=>e.nv?.[n.k]).filter(Boolean))]; return vs.length?`${n.name} ${vs.join('/')}`:''}).filter(Boolean);
   const habits=[...new Set(a.ev.flatMap(e=>(e.habitWords||'').split(/[,，、\s]+/).filter(Boolean)))];
   if(nv.length||habits.length){L.push('','■ 말투·태도'); if(nv.length) L.push(nv.join(' · ')); if(habits.length) L.push('자주 쓴 습관어: '+habits.join(', '));}
-  const jobs=[...new Set(a.ev.flatMap(e=>e.jobs||[]))]; if(jobs.length){L.push('','■ 추천 직무: '+jobs.join(', ')); a.ev.filter(e=>e.jobNote).forEach(e=>L.push('- '+e.jobNote));}
-  const fups=[...new Set(a.ev.flatMap(e=>(e.followups||'').split('\n').map(x=>x.trim()).filter(Boolean)))]; if(fups.length){L.push('','■ 예상 꼬리질문'); fups.forEach(q=>L.push('- '+q));}
   if(comment) L.push('','■ 종합 의견',comment);
   L.push('','※ 본 모의면접은 선발이 아닌 성장 지원을 목적으로 합니다.');
   return L.join('\n');
@@ -781,7 +778,7 @@ function viewRoster(){
   const pool=S.casePool||CASES.map(c=>c.id);
   const ccount=Object.fromEntries(CASES.map(c=>[c.id,list.filter(s=>s.caseId===c.id).length]));
   const unassigned=list.filter(s=>!s.caseId).length;
-  return `<div class="grid2" style="align-items:start;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+  return cleanupCard()+`<div class="grid2" style="align-items:start;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
    <div class="card"><h3 style="margin:0 0 4px">교육생 일괄 등록</h3>
      <p style="margin:0 0 12px;color:var(--muted);font-size:13px">한 줄에 한 명씩 <b>이름, 면접 시간, 면접실, 케이스 번호(1~5)</b> 순으로 붙여넣으세요. 시간·면접실·케이스는 생략할 수 있습니다. 면접 Time Table 엑셀에서 열을 복사해도 됩니다(탭 구분 가능).</p>
@@ -824,7 +821,60 @@ async function importRoster(file){
   let ok=0;
   for(const x of list){ try{ await S.db.doc('students/'+x.id).set(x.data,{merge:true}); ok++; msg.textContent=`${ok}/${list.length}명 등록 중…`; }
     catch(err){ msg.textContent=isDenied(err)?'등록 권한이 없습니다. 로그인 상태를 확인해 주세요.':'일부를 등록하지 못했습니다. 다시 시도해 주세요.'; return; } }
-  msg.textContent=`${ok}명을 등록했습니다`; toast(`명단 ${ok}명을 불러왔습니다`);
+  { const camps=[...new Set(list.map(x=>x.data.campus).filter(Boolean))]; const prev=LS.get('fileIds',[]), prevC=LS.get('fileCampuses',[]);
+    const keep=prev.filter(id=>{ const st=S.students[id]; return st && !camps.includes(st.campus); });
+    LS.set('fileIds',[...new Set([...keep,...list.map(x=>x.id)])]); LS.set('fileCampuses',[...new Set([...prevC,...camps])]); } S.cleanSel={}; S.cleanConfirm=false;
+  msg.textContent=`${ok}명을 등록했습니다`; toast(`명단 ${ok}명을 불러왔습니다`); render();
+}
+const normName = v => String(v||'').replace(/\s+/g,'');
+function cleanupCandidates(){
+  const ids=Object.keys(S.students); const saved=LS.get('fileIds',[]);
+  const camps=LS.get('fileCampuses',[]);
+  const canon=new Set([...saved, ...ids.filter(id=>/^(ch|hd)\d+$/.test(id) && !(camps.includes(S.students[id].campus) && saved.length))]);
+  if(!canon.size) return [];
+  const key=x=>(x.campus||'')+'|'+normName(x.name);
+  const byKey={}; ids.filter(id=>canon.has(id)).forEach(id=>{ byKey[key(S.students[id])]=id; });
+  return ids.filter(id=>!canon.has(id) && (!camps.length || camps.includes(S.students[id].campus))).map(id=>{ const st=S.students[id];
+    return {id, st, target:byKey[key(st)]||null, evalCount:['hr','tech'].filter(r=>S.evals[id+'__'+r]).length, hasFinal:!!S.finals[id]}; })
+    .sort((a,b)=>(a.st.campus||'').localeCompare(b.st.campus||'')||normName(a.st.name).localeCompare(normName(b.st.name),'ko'));
+}
+function cleanChecked(c){ return S.cleanSel[c.id] ?? (!!c.target || (!c.evalCount && !c.hasFinal)); }
+function cleanupCard(){
+  if(!S.me?.admin && !S.demo) return '';
+  const list=cleanupCandidates(); if(!list.length) return '';
+  const sel=list.filter(cleanChecked);
+  return `<div class="card cleanup"><h3 style="margin:0 0 4px">명단 정리 필요 · <span class="num">${list.length}</span>명</h3>
+    <p style="margin:0 0 10px;color:var(--muted);font-size:13px">마지막으로 불러온 명단 파일에 없는 항목입니다. 같은 이름의 정식 항목이 있으면 <b>평가·결과지·케이스를 그쪽으로 옮긴 뒤</b> 지웁니다. 같은 이름이 없는 항목(예: 이번에 빠진 교육생)은 지우면 평가도 함께 삭제됩니다.</p>
+    <div class="clist">${list.map(c=>`<label class="crow"><input type="checkbox" data-clean="${c.id}" ${cleanChecked(c)?'checked':''}>
+      <b>${esc(c.st.name)}</b><span class="cmeta">${esc(c.st.campus||'')} ${esc(c.st.slot||'')} ${esc(c.st.room||'')}</span>
+      ${c.target?`<span class="pill acc">중복 → ${esc(S.students[c.target].slot||'')} ${esc(S.students[c.target].room||'')} 항목으로 합침${c.evalCount?` · 평가 ${c.evalCount}건 옮김`:''}</span>`
+               :`<span class="pill">명단에서 빠짐</span>${c.evalCount||c.hasFinal?` <span class="pill warn">평가 ${c.evalCount}건 있음 · 지우면 함께 삭제</span>`:''}`}</label>`).join('')}</div>
+    <div class="row" style="margin-top:12px">${S.cleanConfirm
+      ? `<span class="confirm" style="color:var(--fg)">선택한 ${sel.length}명을 정리할까요? 되돌릴 수 없습니다.</span><button class="btn danger" data-act="cleanRun" ${S.cleaning?'disabled':''}>${S.cleaning?'정리 중…':'정리'}</button><button class="btn ghost" data-act="cleanCancel">취소</button>`
+      : `<button class="btn primary" data-act="cleanAsk" ${sel.length?'':'disabled'}>선택한 ${sel.length}명 정리</button>`}</div></div>`;
+}
+async function runCleanup(){
+  if(S.demo){ cleanupCandidates().filter(cleanChecked).forEach(c=>delete S.students[c.id]); S.cleanConfirm=false; render(); return; }
+  const todo=cleanupCandidates().filter(cleanChecked); if(!todo.length) return;
+  S.cleaning=true; render();
+  let ok=0, moved=0;
+  try{
+    for(const c of todo){
+      if(c.target){
+        const tgt=S.students[c.target];
+        for(const r of ['hr','tech']){ const old=S.evals[c.id+'__'+r];
+          if(old && !S.evals[c.target+'__'+r]){ await S.db.doc('evals/'+c.target+'__'+r).set({...old, sid:c.target, interviewers:tgt.interviewers||[]}); moved++; } }
+        if(S.finals[c.id] && !S.finals[c.target]) await S.db.doc('finals/'+c.target).set(S.finals[c.id]);
+        if(c.st.caseId && !tgt.caseId) await S.db.doc('students/'+c.target).update({caseId:c.st.caseId});
+      }
+      await S.db.doc('students/'+c.id).delete();
+      for(const r of ['hr','tech']) await S.db.doc('evals/'+c.id+'__'+r).delete();
+      await S.db.doc('finals/'+c.id).delete();
+      ok++;
+    }
+    toast(`${ok}명을 정리했습니다${moved?` · 평가 ${moved}건을 옮겼습니다`:''}`);
+  }catch(err){ toast(isDenied(err)?'정리할 권한이 없습니다 (관리자만 가능)':`정리 중 오류가 났습니다. ${ok}명까지 처리됐습니다. 다시 시도해 주세요`); }
+  S.cleaning=false; S.cleanConfirm=false; S.cleanSel={}; render();
 }
 function ivPeople(){
   const m=new Map(), all=Object.values(S.students);
@@ -911,6 +961,9 @@ document.addEventListener('click', async e=>{
   else if(act==='case'){ if(S.draft.caseId===v) return; S.draft.caseId=v; markDirty(); assignCase(S.sel,v); const y=scrollY; render(); scrollTo(0,y); }
   else if(act==='pool'){ const p=S.casePool||CASES.map(c=>c.id); const i=p.indexOf(v); if(i<0) p.push(v); else if(p.length>1) p.splice(i,1); S.casePool=p; render(); }
   else if(act==='autoAssign') autoAssign();
+  else if(act==='cleanAsk'){ S.cleanConfirm=true; render(); }
+  else if(act==='cleanCancel'){ S.cleanConfirm=false; render(); }
+  else if(act==='cleanRun') runCleanup();
   else if(act==='mine'){ S.mineOnly = v==='1'; render(); }
   else if(act==='ivpApply'){ const g=ivPeople().find(x=>x.key===v); if(!g) return; const raw=($('#ivp-'+v)?.value||'').trim().toLowerCase();
       if(raw && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw)){ toast('이메일 형식을 확인해 주세요'); return; }
@@ -920,7 +973,6 @@ document.addEventListener('click', async e=>{
   else if(act==='present') present(caseOf(S.draft.caseId));
   else if(act==='closePresent') $('#present').hidden=true;
   else if(act==='nv'){const k=el.dataset.k; if(S.draft.nv[k]===v) delete S.draft.nv[k]; else S.draft.nv[k]=v; el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.draft.nv[k])); markDirty();}
-  else if(act==='job'){const j=S.draft.jobs, i=j.indexOf(v); if(i<0) j.push(v); else j.splice(i,1); el.setAttribute('aria-pressed',i<0); markDirty();}
   else if(act==='timer'){const t=S.timer; if(t.run){t.elapsed+=Date.now()-t.start;t.run=false}else{t.start=Date.now();t.run=true} el.textContent=t.run?'일시정지':'계속';}
   else if(act==='treset'){S.timer={start:null,elapsed:0,run:false}; render();}
   else if(act==='openResult'){S.resultSel=v; S.view='result'; S.finalDraft=null; S.finalDirty=false; render(); window.scrollTo(0,0);}
@@ -948,7 +1000,7 @@ document.addEventListener('input', e=>{
 });
 function markFinalDirty(){ if(!S.finalDirty){S.finalDirty=true; const b=document.querySelector('[data-act="saveFinal"]'); if(b) b.textContent='결과지 내용 저장';} }
 function refreshPaper(){ const p=$('#paper'); if(p&&S.resultSel) p.outerHTML=sheetHTML(S.resultSel); }
-document.addEventListener('change', e=>{ if(e.target.id==='rosterFile'){importRoster(e.target.files?.[0]); e.target.value=''; return;} if(e.target.dataset.assign){assignCase(e.target.dataset.assign, e.target.value||null); return;} if(e.target.id==='rsel'){S.resultSel=e.target.value; S.finalDraft=null; S.finalDirty=false; render();} });
+document.addEventListener('change', e=>{ if(e.target.dataset.clean){ S.cleanSel[e.target.dataset.clean]=e.target.checked; S.cleanConfirm=false; render(); return; } if(e.target.id==='rosterFile'){importRoster(e.target.files?.[0]); e.target.value=''; return;} if(e.target.dataset.assign){assignCase(e.target.dataset.assign, e.target.value||null); return;} if(e.target.id==='rsel'){S.resultSel=e.target.value; S.finalDraft=null; S.finalDirty=false; render();} });
 addEventListener('keydown', e=>{ if(e.key==='Escape'&&!$('#present').hidden){$('#present').hidden=true;return;} if(e.key==='Enter'&&e.target.matches?.('tr[data-act]')){e.target.click();return;} if((e.metaKey||e.ctrlKey)&&e.key==='s'&&S.view==='input'&&S.draft){e.preventDefault(); saveEval();} });
 
 /* ───────── 저장 ───────── */
@@ -959,7 +1011,7 @@ async function saveEval(){
   const key=S.sel+'__'+S.role;
   const body={sid:S.sel, role:S.role, interviewers:S.students[S.sel]?.interviewers||[], interviewer:S.draft.interviewer.trim(), scores:S.draft.scores, caseId:S.draft.caseId, caseScores:Object.fromEntries(Object.entries(S.draft.caseScores).filter(([k])=>caseOf(S.draft.caseId).items.some(i=>i.k===k))), notes:S.draft.notes, strengths:S.draft.strengths||'', improve:S.draft.improve||'', oneLine:S.draft.oneLine||'',
     nv:S.draft.nv, habitWords:S.draft.habitWords||'', top3:S.draft.top3,
-    prepQs:S.draft.prepQs||'', jobs:S.draft.jobs, jobNote:S.draft.jobNote||'', followups:S.draft.followups||'', updatedAt:Date.now()};
+    prepQs:S.draft.prepQs||'', memo:S.draft.memo||'', updatedAt:Date.now()};
   if(S.demo){S.evals[key]=body; S.dirty=false; S.saveMsg='예시 화면이라 이 브라우저에서만 반영됩니다'; render(); return;}
   S.saving=true; renderSavebar();
   try{ await S.db.doc('evals/'+key).set(body); S.dirty=false; S.saveErr=false; S.saveMsg=`저장됨 · ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`; try{localStorage.removeItem('kmi:draft:'+key)}catch(_){} toast(`${S.students[S.sel]?.name} · ${ROLES[S.role].short} 평가를 저장했습니다`);}
@@ -1016,13 +1068,12 @@ function downloadSheet(){
 }
 function downloadCSV(){
   const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
-  const head=['캠퍼스','시간','이름','인사 면접관','실무 면접관',...COMMON.map(i=>`${i.name}(평균/5)`),'환산점수(/100)','Case(/100)','케이스 유형','우선개선과제','추천직무','예상꼬리질문','강점','개선과제','종합의견','전달'];
+  const head=['캠퍼스','시간','이름','인사 면접관','실무 면접관',...COMMON.map(i=>`${i.name}(평균/5)`),'환산점수(/100)','Case(/100)','케이스 유형','우선개선과제','강점','개선과제','종합의견','전달','인사 면접관 메모','실무 면접관 메모'];
   const lines=[head.map(q).join(',')];
   sortedStudents().forEach(s=>{const a=aggregate(s.id),f=S.finals[s.id]||{},hr=EV(s.id,'hr'),te=EV(s.id,'tech');
     lines.push([s.campus,s.slot,s.name,hr?.interviewer,te?.interviewer,...COMMON.map(i=>a.common[i.k]!=null?fmt(a.common[i.k],2):''),a.commonTotal.total!=null?fmt(a.commonTotal.total):'',a.caseTotal.total!=null?fmt(a.caseTotal.total):'', a.caseTotal.total!=null?a.caseDef.type:'',
       ((f.top3&&f.top3.some(Boolean))?f.top3:a.top3).filter(Boolean).join(' / '),
-      [...new Set(a.ev.flatMap(e=>e.jobs||[]))].join(', '), [...new Set(a.ev.flatMap(e=>(e.followups||'').split('\n').map(x=>x.trim()).filter(Boolean)))].join(' / '),
-      a.ev.map(e=>e.strengths).filter(Boolean).join(' / '),a.ev.map(e=>e.improve).filter(Boolean).join(' / '),f.comment||'',f.delivered?'완료':''].map(q).join(','))});
+      a.ev.map(e=>e.strengths).filter(Boolean).join(' / '),a.ev.map(e=>e.improve).filter(Boolean).join(' / '),f.comment||'',f.delivered?'완료':'',hr?.memo||'',te?.memo||''].map(q).join(','))});
   save(`모의면접_취합_${new Date().toISOString().slice(0,10)}.csv`, '﻿'+lines.join('\r\n'));
 }
 
