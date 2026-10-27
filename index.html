@@ -422,6 +422,19 @@ const CASES = [
    {k:'d_ops',  name:'배포·운영',            w:15, desc:'단계적 배포, 모니터링, 롤백 계획, 사용자 안내를 고려하는가'},
    {k:'d_role', name:'개발자 역할 인식',     w:15, desc:'AI는 도구이고 결과의 책임은 개발자에게 있다는 관점, 판단·소통의 가치를 설명하는가'}],
   follow:['AI가 짠 코드에서 문제가 생기면 누구의 책임이라고 생각합니까?','일주일 중 가장 많은 시간을 쓸 단계는 어디이고, 그 이유는?']},
+ {id:'e', no:'5', type:'문제 해결·오류 대응', short:'오류', title:'캘린더 일정 중복 등록', time:'케이스 읽기 1분 · 답변 3분 · 후속 질문 2분',
+  situation:['당신은 사용자가 요청하면 캘린더에 일정을 등록해 주는 AI Agent를 개발했습니다.',
+   '사용자가 “내일 오후 3시에 모의면접 준비 일정을 넣어줘”라고 요청하자, Agent는 “오류가 발생해 등록하지 못했습니다. 다시 요청해 주세요”라고 답했습니다.',
+   '사용자가 다시 요청하자, 이번에는 Agent가 “일정이 등록되었습니다”라고 답했습니다. 이후 캘린더를 열어 보니, 같은 일정이 두 개 등록돼 있었습니다.'],
+  qs:[['','이 상황에서 무엇부터 확인하실 건가요?'],
+      ['','그리고 같은 문제가 반복되지 않도록 어떻게 개선하겠습니까?']],
+  items:[
+   {k:'e_cause', name:'원인 파악과 사실 확인',   w:25, desc:'로그·캘린더 API 응답으로 첫 요청이 실제로는 등록됐는지(타임아웃·응답 처리 오류) 확인하고, 실패 판단과 재시도가 중복을 만든 경위를 짚는가'},
+   {k:'e_fix',   name:'재발 방지 설계',          w:30, desc:'요청 ID·멱등성 키, 등록 전 중복 조회, 실패·타임아웃 시 실제 등록 여부 확인 후 응답, 결과 검증 후 성공 안내 등 구체적인 방안을 제시하는가'},
+   {k:'e_ux',    name:'사용자 안내와 신뢰',       w:15, desc:'확실하지 않은 상태를 “실패”로 단정하지 않고 정직하게 안내하며, 중복 가능성이 있을 때 사용자에게 확인을 요청하고 이미 생긴 중복 정리까지 고려하는가'},
+   {k:'e_test',  name:'검증·모니터링',           w:15, desc:'타임아웃·네트워크 오류 상황을 재현해 테스트하고, 로그·알림으로 같은 문제를 빨리 발견하는 방법을 제시하는가'},
+   {k:'e_prio',  name:'우선순위와 책임감',         w:15, desc:'사용자 영향을 먼저 수습하고 원인 분석·개선 순서를 합리적으로 정하며, 관련자 공유와 재발 방지 기록까지 고려하는가'}],
+  follow:['첫 요청은 실제로 등록됐는데 응답만 실패한 것이라면, Agent는 사용자에게 뭐라고 답해야 했을까요?','등록 전 중복을 확인한다면 ‘같은 일정’의 기준은 무엇으로 정하겠습니까? 사용자가 정말 같은 일정을 두 번 넣고 싶었다면?']},
 ];
 const CASE_BY = Object.fromEntries(CASES.map(c=>[c.id,c]));
 const caseOf = id => CASE_BY[id] || CASES[0];
@@ -771,7 +784,7 @@ function viewRoster(){
   return `<div class="grid2" style="align-items:start;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
    <div class="card"><h3 style="margin:0 0 4px">교육생 일괄 등록</h3>
-     <p style="margin:0 0 12px;color:var(--muted);font-size:13px">한 줄에 한 명씩 <b>이름, 면접 시간, 면접실, 케이스 번호(1~4)</b> 순으로 붙여넣으세요. 시간·면접실·케이스는 생략할 수 있습니다. 면접 Time Table 엑셀에서 열을 복사해도 됩니다(탭 구분 가능).</p>
+     <p style="margin:0 0 12px;color:var(--muted);font-size:13px">한 줄에 한 명씩 <b>이름, 면접 시간, 면접실, 케이스 번호(1~5)</b> 순으로 붙여넣으세요. 시간·면접실·케이스는 생략할 수 있습니다. 면접 Time Table 엑셀에서 열을 복사해도 됩니다(탭 구분 가능).</p>
      <label class="f">캠퍼스<select id="bulkCampus"><option value="홍대">서울 홍대</option><option value="천안">천안</option></select></label>
      <label class="f" style="margin-top:10px">명단<textarea id="bulk" style="min-height:150px" placeholder="홍길동, 09:00, A실, 2&#10;김민지, 09:20, A실, 3&#10;이서준, 09:40"></textarea></label>
      <div class="row" style="margin-top:10px"><button class="btn primary" data-act="bulkAdd">등록</button><small id="bulkMsg" style="color:var(--muted)"></small></div>
