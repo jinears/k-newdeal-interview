@@ -342,6 +342,7 @@ tr.click{cursor:pointer}
 <div class="present" id="present" hidden></div>
 <div class="toast" id="toast" role="status"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -568,7 +569,7 @@ function viewInput(){
   const items = list.map(s=>`<li><button data-act="sel" data-v="${s.id}" aria-current="${S.sel===s.id}">
      <span class="slot">${esc(s.slot||(s.team||'').replace('회차 ','-').replace('조',''))}</span><span class="nm">${esc(s.name)}</span>
      <span class="dots">${['hr','tech'].map(r=>`<span class="dot ${EV(s.id,r)?'on':S.evals[s.id+'__'+r]?'prep':''}" title="${ROLES[r].name} ${EV(s.id,r)?'평가 입력 완료':S.evals[s.id+'__'+r]?'사전 질문만 작성':'미입력'}">${ROLES[r].tag}</span>`).join('')}</span></button></li>`).join('');
-  const roster = `<aside class="roster"><div class="roster-head">${hasMine?`<div class="seg" role="group" aria-label="보기 범위"><button data-act="mine" data-v="1" aria-pressed="${mineOnly}">내 담당</button><button data-act="mine" data-v="0" aria-pressed="${!mineOnly}">전체 교육생</button></div>`:''}${campusSeg()}<input type="text" id="q" placeholder="이름 검색" value="${esc(S.search)}" aria-label="이름 검색"></div>
+  const roster = `<aside class="roster"><div class="roster-head">${S.me&&!S.demo?`<button class="btn" data-act="rawMine" style="width:100%">내 평가 원본 내려받기 (엑셀)</button>`:''}${hasMine?`<div class="seg" role="group" aria-label="보기 범위"><button data-act="mine" data-v="1" aria-pressed="${mineOnly}">내 담당</button><button data-act="mine" data-v="0" aria-pressed="${!mineOnly}">전체 교육생</button></div>`:''}${campusSeg()}<input type="text" id="q" placeholder="이름 검색" value="${esc(S.search)}" aria-label="이름 검색"></div>
     <ul>${items||'<li class="empty">해당 교육생이 없습니다</li>'}</ul></aside>`;
   return `<div class="split">${roster}<section class="sheet">${S.sel&&S.students[S.sel]?evalForm():`<div class="card empty">왼쪽 목록에서 면접할 교육생을 선택하세요.<br><small>H = 인사 면접관, T = 실무 면접관 · 초록은 평가 입력 완료, 파랑은 사전 질문만 작성</small></div>`}</section></div>`;
 }
@@ -681,7 +682,7 @@ function viewSummary(){
     <div class="stat"><small>결과지 전달 완료</small><b>${done.length}<em> / ${list.length}</em></b></div>
     <div class="stat"><small>평균 환산 점수</small><b>${fmt(avgT)}<em> / 100</em></b></div>
     <div class="stat"><small>가장 보완이 필요한 항목</small><b style="font-size:15px;font-family:var(--f-body)">${itemAvg[0]?esc(itemAvg[0].it.name):'–'}</b>${itemAvg[0]?`<small class="num">평균 ${fmt(itemAvg[0].v,2)} / 5</small>`:''}</div></div>
-  <div class="toolbar">${campusSeg()}<span class="grow"></span><small style="color:var(--muted)">항목 점수는 두 면접관 평균(1~5). <span class="gap">주황색</span>은 2점 이상 차이 — 보정 논의 권장</small><button class="btn" data-act="csv">CSV로 저장</button></div>
+  <div class="toolbar">${campusSeg()}<span class="grow"></span><small style="color:var(--muted)">항목 점수는 두 면접관 평균(1~5). <span class="gap">주황색</span>은 2점 이상 차이 — 보정 논의 권장</small><button class="btn" data-act="csv">CSV로 저장</button><button class="btn primary" data-act="rawAll">면접관 원본 내려받기 (엑셀)</button></div>
   <div class="tablebox"><table><thead><tr><th>캠퍼스</th><th>시간</th><th>이름</th><th>인사</th><th>실무</th>${COMMON.map(it=>`<th class="n" title="${esc(it.name)}">${esc(it.name.split(' ')[0].replace('AI·개발','AI·개발'))}<br><span style="font-weight:500">${it.w}</span></th>`).join('')}<th class="n">환산</th><th class="n">Case</th><th>상태</th></tr></thead><tbody>${rows||'<tr><td colspan="14" class="empty">해당 캠퍼스 교육생이 없습니다</td></tr>'}</tbody></table></div>`;
 }
 
@@ -982,6 +983,8 @@ document.addEventListener('click', async e=>{
   else if(act==='copy'){const txt=sheetText(S.resultSel); try{await navigator.clipboard.writeText(txt); toast('결과지 텍스트를 복사했습니다');}catch(err){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('결과지 텍스트를 복사했습니다')}catch(_){toast('복사가 막혀 있습니다. 결과지를 직접 선택해 복사하세요')} ta.remove();}}
   else if(act==='dl') downloadSheet();
   else if(act==='csv') downloadCSV();
+  else if(act==='rawAll') downloadRaw(false);
+  else if(act==='rawMine') downloadRaw(true);
   else if(act==='bulkAdd') bulkAdd();
   else if(act==='delAsk'){S.rosterConfirm=v; render();}
   else if(act==='delCancel'){S.rosterConfirm=null; render();}
@@ -1065,6 +1068,50 @@ function downloadSheet(){
   const html=`<!doctype html><html lang="ko" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>모의면접 피드백 - ${esc(s.name)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&family=Nanum+Myeongjo:wght@700;800&display=swap"><style>${css}
   body{padding:24px 16px} .paper{max-width:820px;margin:0 auto} @media print{body{padding:0}.paper{box-shadow:none;border:0}}</style></head><body data-theme="light">${sheetHTML(sid,true)}</body></html>`;
   save(`모의면접_피드백_${s.campus}_${s.name}.html`, html);
+}
+function rawRows(mineOnly){
+  const me=S.me?.email||'';
+  const rows=[];
+  const studs=Object.entries(S.students).map(([id,s])=>({id,...s}))
+    .sort((a,b)=>(a.campus||'').localeCompare(b.campus||'')||(a.date||'').localeCompare(b.date||'')||(a.slot||'').localeCompare(b.slot||'')||(a.room||'').localeCompare(b.room||''));
+  for(const st of studs){
+    for(const role of ['hr','tech']){
+      const e=S.evals[st.id+'__'+role]; if(!e) continue;
+      if(mineOnly && st[role==='tech'?'ivTechEmail':'ivHrEmail']!==me) continue;
+      const cdef=caseOf(e.caseId||st.caseId), c1=conv(e.scores,COMMON), c2=conv(e.caseScores,cdef.items);
+      const r={'캠퍼스':st.campus||'','면접일':st.date||'','시간':st.time||st.slot||'','면접실':st.room||'','교육생':st.name||'',
+        '역할':ROLES[role].name,'면접관':e.interviewer||'','저장 시각':e.updatedAt?new Date(e.updatedAt).toLocaleString('ko-KR'):''};
+      COMMON.forEach(it=>{ r[`${it.name} (1~5)`]=e.scores?.[it.k]??''; });
+      r['공통 환산 (/100)']=c1.filled?Math.round(c1.total):'';
+      r['케이스']=`${cdef.no}. ${cdef.type}`;
+      r['케이스 항목별 점수 (1~5)']=cdef.items.map(it=>`${it.name}: ${e.caseScores?.[it.k]??'-'}`).join('\n');
+      r['케이스 환산 (/100)']=c2.filled?Math.round(c2.total):'';
+      SECTIONS.forEach(x=>{ r[`관찰 메모 · ${x.name}`]=e.notes?.[x.k]||''; });
+      NONVERBAL.forEach(n=>{ r[n.name]=e.nv?.[n.k]||''; });
+      r['자주 쓴 습관어']=e.habitWords||'';
+      r['강점']=e.strengths||''; r['개선 과제']=e.improve||'';
+      [0,1,2].forEach(i=>{ r[`우선 개선 과제 ${i+1}`]=(e.top3||[])[i]||''; });
+      r['한 줄 총평']=e.oneLine||''; r['면접 전 준비 질문']=e.prepQs||''; r['면접관 메모']=e.memo||'';
+      rows.push(r);
+    }
+  }
+  return rows;
+}
+async function downloadRaw(mineOnly){
+  if(!window.XLSX){ toast('엑셀 도구를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요'); return; }
+  const rows=rawRows(mineOnly);
+  if(!rows.length){ toast(mineOnly?'아직 저장한 평가가 없습니다':'아직 저장된 평가가 없습니다'); return; }
+  const wb=XLSX.utils.book_new(), used=new Set();
+  const addSheet=(name,data)=>{ let n=String(name).replace(/[\\\/\?\*\[\]:]/g,' ').slice(0,28)||'시트', k=n, i=2; while(used.has(k)) k=n+'_'+(i++); used.add(k);
+    const ws=XLSX.utils.json_to_sheet(data); const cols=Object.keys(data[0]);
+    ws['!cols']=cols.map(c=>({wch: /메모|강점|개선 과제|질문|케이스 항목/.test(c)?48: c.length>8?16:12})); XLSX.utils.book_append_sheet(wb,ws,k); };
+  addSheet(mineOnly?'내 평가':'전체',rows);
+  if(!mineOnly){ const by={}; rows.forEach(r=>{ const key=r['면접관']||'(이름 없음)'; (by[key] ||= []).push(r); });
+    Object.keys(by).sort((a,b)=>a.localeCompare(b,'ko')).forEach(k=>addSheet(k,by[k])); }
+  const day=new Date().toISOString().slice(0,10);
+  const fname=mineOnly?`모의면접_내평가_${(S.me?.email||'').split('@')[0]}_${day}.xlsx`:`모의면접_면접관원본_${day}.xlsx`;
+  try{ XLSX.writeFile(wb,fname); toast('파일을 저장했습니다'); }
+  catch(e){ const out=XLSX.write(wb,{bookType:'xlsx',type:'array'}); await save(fname,new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); }
 }
 function downloadCSV(){
   const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
